@@ -31,11 +31,11 @@ const HOME_HTML = `<!DOCTYPE html>
 <style>
   :root{
     --paper:#F7F3E8; --ink:#231D16; --dim:#7a746a; --bar:74px;
-    --red:#E5484D; --red-t:#FBE4E4;
-    --green:#249B53; --green-t:#E0F3E7;
-    --blue:#3B7DF6; --blue-t:#E4EDFE;
-    --amber:#EC8A0A; --amber-t:#FCEEDA;
-    --purple:#875CF8; --purple-t:#EEE8FE;
+    --red:#F5565B; --red-t:#FFECEC;
+    --green:#2BB461; --green-t:#E9F9F0;
+    --blue:#4F8DFF; --blue-t:#ECF3FF;
+    --amber:#FF9E1B; --amber-t:#FFF3E0;
+    --purple:#9B72FF; --purple-t:#F3EDFF;
     --sans:'Pretendard',-apple-system,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -107,7 +107,7 @@ const HOME_HTML = `<!DOCTYPE html>
 
   /* chips */
   .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .chips span{background:#fff;border:1.5px solid #e7dccb;border-radius:999px;padding:8px 5px;font-size:12.5px;font-weight:700;display:flex;gap:4px;align-items:center;justify-content:center}
+  .chips span{background:#fff;border:1.5px solid #e7dccb;border-radius:999px;padding:8px 4px;font-size:12px;font-weight:700;display:flex;gap:4px;align-items:center;justify-content:center;white-space:nowrap;letter-spacing:-.01em}
 
   /* steps */
   .steps{margin-top:6px}
@@ -203,9 +203,9 @@ const HOME_HTML = `<!DOCTYPE html>
     <!-- 혜택 -->
     <div class="sh green"><span>🎁 이 가격에 다 됩니다</span></div>
     <div class="brow"><span class="em">💳</span><span class="l">무료 설치<small>설치비·가맹비·관리비</small></span><span class="v free">₩0</span></div>
-    <div class="brow"><span class="em">⚡</span><span class="l">빠른 설치<small>신청 후 빠르게 방문</small></span><span class="v ok">✅</span></div>
+    <div class="brow"><span class="em">⚡</span><span class="l">빠른 설치<small>신청 후 빠르게</small></span><span class="v ok">✅</span></div>
     <div class="brow"><span class="em">🏪</span><span class="l">전 업종 설치<small>어떤 매장이든</small></span><span class="v ok">✅</span></div>
-    <div class="brow"><span class="em">🔧</span><span class="l">평생 A/S<small>24시간 대응</small></span><span class="v ok">✅</span></div>
+    <div class="brow"><span class="em">🔧</span><span class="l">평생 A/S<small>끝까지 관리</small></span><span class="v ok">✅</span></div>
 
     <div class="callout">📞 전화 한 통 <span class="ar">→</span> ⚡ 빠른 설치</div>
 
@@ -229,22 +229,21 @@ const HOME_HTML = `<!DOCTYPE html>
     <div class="vsbox new">
       <div class="vt">😎 24페이샵으로 바꾸면</div>
       <div class="it">✅ 설치비·가맹비·관리비 0원</div>
-      <div class="it">✅ 신청하면 빠르게 방문 설치</div>
-      <div class="it">✅ 24시간 평생 A/S</div>
+      <div class="it">✅ 신청하면 빠르게 설치</div>
+      <div class="it">✅ 평생 A/S로 끝까지</div>
     </div>
 
     <!-- 왜 -->
     <div class="sh amber"><span>⭐ 왜 24페이샵?</span></div>
-    <div class="brow"><span class="em">🚀</span><span class="l">신청하면 빠른 설치<small>가까운 기사님이 바로 방문</small></span></div>
+    <div class="brow"><span class="em">🚀</span><span class="l">신청하면 빠른 설치<small>근처 기사님이 직접 챙겨요</small></span></div>
     <div class="brow"><span class="em">🎯</span><span class="l">매장 맞춤 추천<small>업종·동선에 딱 맞는 단말기로</small></span></div>
-    <div class="brow"><span class="em">🛡️</span><span class="l">설치 후에도 끝까지<small>고장·교체·문의 24시간 책임</small></span></div>
+    <div class="brow"><span class="em">🛡️</span><span class="l">설치 후에도 끝까지<small>고장·교체·문의 끝까지 책임</small></span></div>
 
     <!-- 단말기 -->
     <div class="sh blue"><span>🖥️ 단말기 라인업</span></div>
     <div class="drow"><span class="em">📱</span><div><div class="dt">무선 <b>WIRELESS</b></div><div class="dd">들고 다니며 결제 · 이동 많은 매장·배달</div></div></div>
     <div class="drow"><span class="em">🖨️</span><div><div class="dt">유선 <b>WIRED</b></div><div class="dd">고정 카운터에 가장 안정적 · 영수증 출력</div></div></div>
     <div class="drow"><span class="em">💻</span><div><div class="dt">포스 <b>POS</b></div><div class="dd">주문·매출·재고까지 한 화면에 통합</div></div></div>
-    <div class="drow"><span class="em">📲</span><div><div class="dt">모바일·QR <b>MOBILE</b></div><div class="dd">휴대폰만 있으면 시작 · 1인 매장에 딱</div></div></div>
 
     <!-- 업종 -->
     <div class="sh purple"><span>🏪 이런 매장에 설치해요</span></div>
@@ -254,7 +253,7 @@ const HOME_HTML = `<!DOCTYPE html>
       <span>🏪 편의점</span><span>🛒 마트·슈퍼</span><span>✂️ 미용실</span><span>💅 네일샵</span><span>💆 마사지·스파</span>
       <span>👕 의류매장</span><span>👟 신발가게</span><span>👓 안경원</span><span>📚 학원</span><span>📖 스터디카페</span>
       <span>💊 약국</span><span>🏥 병원·의원</span><span>🦷 치과</span><span>🐶 동물병원</span><span>🏋️ 헬스장</span>
-      <span>🧘 요가·필라테스</span><span>🎤 노래방</span><span>🧺 세탁소</span><span>🔧 카센터</span><span>📷 사진관</span>
+      <span>🧘 필라테스</span><span>🎤 노래방</span><span>🧺 세탁소</span><span>🔧 카센터</span><span>📷 사진관</span>
       <span>🧸 키즈카페</span><span>⛽ 주유소</span><span>🏨 펜션·숙박</span><span>🤖 무인매장</span><span>🚚 푸드트럭</span>
       <span>💐 꽃집</span>
     </div>
@@ -266,7 +265,7 @@ const HOME_HTML = `<!DOCTYPE html>
       <div class="stepar">↓</div>
       <div class="step s2"><div class="c">2</div><div class="x"><h4>📝 맞춤 견적</h4><p>단말기·수수료 안내, 서류는 간단히.</p></div></div>
       <div class="stepar">↓</div>
-      <div class="step s3"><div class="c">3</div><div class="x"><h4>🔧 빠른 설치</h4><p>방문 설치·개통, 바로 카드결제 시작.</p></div></div>
+      <div class="step s3"><div class="c">3</div><div class="x"><h4>🔧 빠른 설치</h4><p>설치·개통하고 바로 카드결제 시작.</p></div></div>
     </div>
 
     <!-- 안심 -->
@@ -284,11 +283,11 @@ const HOME_HTML = `<!DOCTYPE html>
       <div class="q"><span>❓</span>설치비가 정말 0원인가요?</div>
       <div class="a"><span>💬</span>설치비·가맹비·관리비는 받지 않습니다. 단말기 등 기기 비용은 상담 때 정확히 안내드려요.</div>
       <div class="q"><span>❓</span>얼마나 빨리 설치되나요?</div>
-      <div class="a"><span>💬</span>접수 즉시 일정을 잡고, 최대한 빠르게 방문·설치합니다.</div>
+      <div class="a"><span>💬</span>접수 즉시 일정을 잡고, 최대한 빠르게 설치해 드립니다.</div>
       <div class="q"><span>❓</span>기존 단말기도 교체되나요?</div>
       <div class="a"><span>💬</span>네, 교체·이전 설치 모두 가능합니다. 현재 상황만 알려주세요.</div>
       <div class="q"><span>❓</span>고장 나면 A/S는 어떻게 받나요?</div>
-      <div class="a"><span>💬</span>전화 한 통이면 24시간 대응합니다. 설치 후에도 끝까지 관리해요.</div>
+      <div class="a"><span>💬</span>전화 주시면 영업시간(09–21시) 안에 바로 대응합니다. 설치 후에도 끝까지 관리해요.</div>
     </div>
 
     <div class="sh amber"><span>📌 안내</span></div>
@@ -395,7 +394,7 @@ const benefElab=[
 "평생 A/S는 ‘설치 후 나 몰라라’ 하지 않겠다는 약속입니다. 기기가 멈추면 장사가 멈추니까요. {LOC} 어디든 전화 한 통이면 바로 대응하고 필요하면 다시 방문합니다.",
 "전 업종 설치가 가능한 이유는 업종별 노하우가 쌓여 있어서입니다. {R}의 어떤 가게든 비슷한 매장에 설치해 본 경험을 바탕으로 시행착오 없이 맞춰드립니다.","무료 설치가 가능한 건 한 번 보고 끝낼 관계가 아니어서입니다. {R} 사장님이 오래 잘 쓰셔야 저희도 의미가 있으니까요. 그래서 시작 부담을 낮추는 데 집중합니다.","평생 A/S라는 말이 부담스러우실 수도 있는데, 뒤집어 보면 그만큼 자신 있다는 뜻입니다. {LOC} 어디든 고장 한 번에 바로 움직이겠다는 약속이죠.","전 업종 설치가 되는 건 가게마다 결제 패턴을 많이 봐왔기 때문입니다. {R}의 어떤 업종이든 비슷한 곳에 해본 경험으로 헤매지 않고 맞춰드립니다.","빠른 설치의 핵심은 결국 ‘가까운 기사님’입니다. {LOC} 가까이에서 움직이니 일정 잡기가 수월하고, 그만큼 방문도 미뤄지지 않습니다."];
 const deviceCard=[
-"{R}에서 많이 쓰는 카드단말기는 크게 무선·유선·모바일로 나뉩니다. 매장을 돌아다니며 결제해야 하면 들고 다니는 무선형, 카운터 한자리에서만 결제하면 안정적인 유선형, 1인·소규모거나 야외라면 휴대폰을 쓰는 모바일·QR형이 잘 맞습니다. 매장 환경만 알려주시면 골라드려요.",
+"{R}에서 많이 쓰는 카드단말기는 크게 무선형과 유선형으로 나뉩니다. 매장을 돌아다니며 결제해야 하면 들고 다니는 무선형이, 카운터 한자리에서만 결제하면 안정적인 유선형이 잘 맞습니다. 매장 환경만 알려주시면 어울리는 기종으로 골라드려요.",
 "카드단말기는 ‘어디서 결제하느냐’로 고르는 게 핵심입니다. 배달·포장이 많고 동선이 넓으면 무선, 자리에서만 받으면 유선, 행사·푸드트럭처럼 옮겨 다니면 모바일형이 답입니다. {R} 매장 구조를 보고 가장 효율적인 기종을 추천드립니다.",
 "IC카드는 기본이고 삼성페이·애플페이·각종 QR 간편결제까지, 요즘 손님이 쓰는 결제 수단이 정말 다양해졌습니다. 하나라도 안 되면 손님을 놓치죠. {R} 매장에서는 이 모든 결제를 한 대로 받는 카드단말기를 기준으로 맞춰드립니다.",
 "유선 단말기는 가장 안정적이라 카페·식당 카운터에 잘 맞고, 무선은 테이블 결제나 매장 밖 응대에 강합니다. 둘을 함께 두는 매장도 많죠. {LOC} 매장 규모와 손님 응대 방식을 보고 조합을 제안드립니다.",
@@ -442,7 +441,7 @@ const effect=[
 "{P}는 ‘싸게’보다 ‘맞게’ 고르는 게 이득입니다. 필요 없는 기능에 돈 쓰거나 꼭 필요한 걸 빼면 결국 손해니까요. {LOC}에서는 과하지도 부족하지도 않게 맞춰드리는 데 집중합니다.","{P}를 제대로 들이면 마감 시간이 눈에 띄게 짧아집니다. 매출이 자동으로 정리되니 계산기 두드릴 일이 줄죠. {R} 사장님이 퇴근을 조금이라도 앞당기게 됩니다.","결제가 매끄러우면 손님 표정부터 달라집니다. 기다림 없이 끝나는 계산은 그 자체로 좋은 경험이죠. {LOC} 매장의 재방문에 은근히 영향을 줍니다.","어떤 메뉴가 언제 잘 팔리는지 숫자로 보이면 발주와 준비가 정확해집니다. {R} 매장에서 버리는 재료와 놓치는 기회가 함께 줄어들죠.","직원에게 ‘결제는 이 기계로 이렇게’ 한마디면 끝나는 단순함도 큰 장점입니다. {LOC}처럼 사람이 자주 바뀌는 매장일수록 교육 부담이 확 줄어듭니다.","결제 기록이 또렷하면 환불·분쟁이 생겨도 근거가 남습니다. {R} 사장님이 억울할 일이 줄고, 손님과의 오해도 빠르게 풀 수 있죠.","무엇보다 ‘기기가 멈추면 어쩌지’ 하는 불안이 사라집니다. 안정적인 {P}와 바로 받는 A/S가 받쳐주면, {LOC} 사장님은 장사 그 자체에만 집중할 수 있습니다."];
 const trust=[
 "정품 {P}만 사용하고 설치비·숨은 비용은 받지 않습니다. 계약 전에 조건을 충분히 설명드리니 부담 없이 상담만 받으셔도 됩니다. {R} 어느 매장이든 ‘일단 들어보고 결정’하셔도 괜찮습니다.",
-"설치하고 끝이 아닙니다. 고장·교체·사용 문의는 전화 한 통이면 24시간 대응하고, {LOC} 지역도 직접 방문합니다. 한 번 인연 맺은 사장님은 끝까지 책임진다는 마음으로 합니다.",
+"설치하고 끝이 아닙니다. 고장·교체·사용 문의는 전화 주시면 영업시간 안에 바로 대응하고, {LOC} 지역도 직접 챙깁니다. 한 번 인연 맺은 사장님은 끝까지 책임진다는 마음으로 합니다.",
 "처음 쓰는 사장님도 어렵지 않게 결제부터 정산까지 직접 알려드립니다. 약정 기간이나 조건은 말로만 하지 않고 서면으로 명확히 남겨, 나중에 ‘이런 말 없었잖아요’ 하는 일이 없도록 합니다.",
 "‘무료’ 뒤에 숨은 함정이 있을까 걱정되실 수 있습니다. 그래서 받는 것과 안 받는 것을 처음에 분명히 말씀드립니다. {R} 사장님이 납득하지 못하면 진행하지 않습니다.",
 "급하게 계약을 밀어붙이지 않습니다. {LOC}에서 여러 곳을 비교 중이시라면 그렇게 하시라고 권합니다. 충분히 따져보고 선택해야 오래 잘 쓰니까요.",
@@ -464,7 +463,7 @@ const faqPool=[
 ["수수료는 얼마인가요?","매출 규모·업종·결제수단에 따라 다릅니다. 계약 전에 정확한 조건을 솔직하게 안내해 드립니다."],
 ["며칠이나 걸리나요?","상담 → 견적 → 설치까지 빠르게 진행됩니다. 서류가 준비되면 더 빨라집니다."],
 ["어떤 {P}를 골라야 할지 모르겠어요.","매장 환경과 업종만 알려주시면 딱 맞는 기종을 추천해 드립니다."],
-["A/S는 어떻게 받나요?","전화 한 통이면 24시간 대응합니다. 설치 후에도 끝까지 관리해요."],
+["A/S는 어떻게 받나요?","전화 주시면 영업시간(09–21시) 안에 바로 대응합니다. 설치 후에도 끝까지 관리해요."],
 ["배달앱·간편결제도 연동되나요?","네, 주요 간편결제와 배달앱 정산까지 연동할 수 있습니다."],
 ["약정 기간이 있나요?","조건은 상담 때 명확히 안내하고 서면으로 남깁니다."],
 ["무인매장에도 설치되나요?","키오스크·무인 결제 구성까지 가능합니다."],
@@ -523,7 +522,7 @@ const STEP1=["업종·매장 환경만 알려주세요. 1분이면 끝.","어떤
 const STEP2=["{P}·수수료 안내, 서류는 간단히.","매장에 맞는 {P}와 조건을 안내드려요.","견적과 필요한 서류를 알려드립니다.","기종·비용·일정을 한 번에 정리해 드려요.","조건을 확인하고 서면으로 남깁니다."];
 const STEP3=["방문 설치·개통, 바로 결제 시작.","기사님이 방문해 설치하고 개통합니다.","설치 후 바로 카드결제가 됩니다.","약속한 날짜에 방문해 마무리합니다.","설치하고 사용법까지 알려드려요."];
 const CHK_POOL=["✅ 업종과 매장 위치","✅ 매장 규모·예상 결제량","✅ 현재 쓰는 단말기 유무","✅ 필요한 결제수단(카드·간편결제 등)","✅ 희망 설치 시기","✅ 하루 평균 결제 건수","✅ 카운터·테이블 결제 위치","✅ 배달앱·키오스크 연동 필요 여부","✅ 사업자등록 상태(예정/완료)","✅ 영수증·세금계산서 사용 여부","✅ 기존 계약·약정 잔여 여부","✅ 인터넷·전화 회선 상황"];
-const BSUB={free:["설치비·가맹비·관리비","가맹비·관리비 0원","설치비 0원","관리비 없음","초기 부담 0원"],fast:["신청 후 빠르게 방문","최대한 빠른 일정","신청하면 곧장","일정 맞춰 신속","바로 일정 조율"],all:["어떤 매장이든","업종 무관","모든 가게","신규·기존 모두","프랜차이즈도"],as:["24시간 대응","끝까지 관리","고장 시 바로","전화 한 통 대응","점검·수리까지"]};
+const BSUB={free:["설치비·가맹비·관리비","가맹비·관리비 0원","설치비 0원","관리비 없음","초기 부담 0원"],fast:["신청 후 빠르게","최대한 빠른 일정","신청하면 곧장","일정 맞춰 신속","바로 일정 조율"],all:["어떤 매장이든","업종 무관","모든 가게","신규·기존 모두","프랜차이즈도"],as:["빠른 대응","끝까지 관리","고장 시 바로","전화 한 통 대응","점검·수리까지"]};
 const BLAB={free:["무료 설치","설치비 무료","가맹비·관리비 0원"],fast:["빠른 설치","신속 설치","빠른 일정"],all:["전 업종 설치","모든 업종 OK","업종 무관 설치"],as:["평생 A/S","평생 사후관리","끝까지 A/S"]};
 const STITLE={s1:["📞 전화 상담","📞 전화 문의","📞 상담 접수"],s2:["📝 맞춤 견적","📝 견적 안내","📝 조건 안내"],s3:["🔧 빠른 설치","🔧 방문 설치","🔧 설치 완료"]};
 const DLBL={pub:["📅 발행","📅 게시","📅 작성"],mod:["✏️ 수정","✏️ 업데이트","🔄 최종수정"]};
@@ -584,6 +583,10 @@ p{margin:11px 0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
 .pcard{display:block;border-radius:16px;padding:20px;text-decoration:none;color:#fff;font-weight:800}
 .pcard .pe{font-size:30px;display:block;margin-bottom:6px}.pcard .ps{display:block;font-size:13px;font-weight:600;opacity:.85;margin-top:4px}
+.sidogrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.sidocard{display:flex;flex-direction:column;gap:3px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;text-decoration:none;color:var(--ink)}
+.sidocard .sn{font-size:17px;font-weight:800}
+.sidocard .sc{font-size:12.5px;color:var(--dim)}
 @media(max-width:520px){.hero h1{font-size:21px}.idx{columns:1}.grid2{grid-template-columns:1fr}}
 `;
 
@@ -724,32 +727,59 @@ ${footer(otherLink,regionLinks)}`;
 }
 
 /* ===== 지역 목록 ===== */
-function listPage(type){
-  const P=type?PROD[type]:null;
-  const pathFor=n=>type?`/${P.path}/${slugOf.get(n)}`:`/card-terminal/${slugOf.get(n)}`;
-  const heading=type?`${P.emoji} ${P.name} 설치 — 전국 지역`:"📍 전체지역";
-  const title=type?`${P.name} 설치 지역 전체 | ${BRAND}`:`전체지역 | ${BRAND} 카드단말기·포스기 설치`;
-  const desc=type?`${P.name} 설치 가능한 전국 ${REGIONS.length.toLocaleString()}개 지역 목록. 우리 동네를 찾아 무료 설치를 신청하세요.`
-                 :`${BRAND}가 설치하는 전국 ${REGIONS.length.toLocaleString()}개 시군구읍면동 전체 목록입니다.`;
-  const canonical=type?`${SITE}/${P.path}`:`${SITE}/regions`;
-  const groups={};
-  for(const [name] of REGIONS){const a=slugOf.get(name)[0].toUpperCase();(groups[a]=groups[a]||[]).push(name);}
-  const idx=Object.keys(groups).sort().map(a=>`<div class="alpha">${a}</div>`+groups[a].map(n=>{
-    const r=bySlug.get(slugOf.get(n))[1];
-    return `<a href="${pathFor(n)}">${esc(n)}${r?`<small>${esc(r)}</small>`:""}</a>`;}).join("")).join("");
-  const bc=[["홈","/"],[type?`${P.name} 설치`:"전체지역",null]];
+/* ===== 시도별 지역 목록 ===== */
+const SIDO_ORDER=[["서울","seoul"],["부산","busan"],["대구","daegu"],["인천","incheon"],["광주","gwangju"],["대전","daejeon"],["울산","ulsan"],["세종","sejong"],["경기","gyeonggi"],["강원","gangwon"],["충북","chungbuk"],["충남","chungnam"],["전북","jeonbuk"],["전남","jeonnam"],["경북","gyeongbuk"],["경남","gyeongnam"],["제주","jeju"],["기타","etc"]];
+const SIDO_NAME2SLUG=new Map(SIDO_ORDER.map(x=>[x[0],x[1]]));
+const SIDO_SLUG2NAME=new Map(SIDO_ORDER.map(x=>[x[1],x[0]]));
+function sidoOf(info){if(!info)return "기타";const t=info.split(" ")[0];return SIDO_NAME2SLUG.has(t)?t:"기타";}
+const SIDO_GROUPS={};
+for(const [nm,info] of REGIONS){const sd=sidoOf(info);(SIDO_GROUPS[sd]=SIDO_GROUPS[sd]||[]).push(nm);}
+function listShell(title,desc,canonical,bc,inner){
   const bcHtml=`<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
   const jsonld=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))});
+  return shell({title,desc,canonical,ogimg:`${SITE}/thumb/card/seoul.svg`,jsonld,body:`${bcHtml}${inner}${footer("","")}`});
+}
+function sidoIndex(type){
+  const P=type?PROD[type]:null;
+  const base=type?`/${P.path}`:"/regions";
+  const label=type?`${P.emoji} ${P.name} 설치`:"📍 전체 지역";
+  const title=type?`${P.name} 설치 지역 (시도별) | ${BRAND}`:`전체 지역 (시도별) | ${BRAND}`;
+  const desc=type?`${P.name} 설치 가능 지역을 시·도별로 정리했습니다. 우리 지역을 선택해 동네를 찾아보세요.`:`${BRAND} 설치 지역을 시·도별로 정리했습니다.`;
+  const cards=SIDO_ORDER.filter(x=>SIDO_GROUPS[x[0]]&&SIDO_GROUPS[x[0]].length).map(x=>`<a class="sidocard" href="${base}/sido/${x[1]}"><span class="sn">${esc(x[0])}</span><span class="sc">${SIDO_GROUPS[x[0]].length.toLocaleString()}개 지역</span></a>`).join("");
   let switcher;
-  if(type){const o=PROD[P.other];switcher=`<div style="margin:10px 0"><a class="allbtn" href="/${o.path}">${o.emoji} ${o.name} 지역 목록 →</a></div>`;}
-  else switcher=`<div class="grid2"><a class="pcard" style="background:linear-gradient(135deg,#3b7df6,#1e40af)" href="/card-terminal"><span class="pe">💳</span>카드단말기 지역<span class="ps">전체 보기 →</span></a><a class="pcard" style="background:linear-gradient(135deg,#249b53,#0f5132)" href="/pos"><span class="pe">🖥️</span>포스기 지역<span class="ps">전체 보기 →</span></a></div>`;
-  const body=`${bcHtml}
-<div class="sh blue"><span>${heading}</span></div>
-<p>전국 <b>${REGIONS.length.toLocaleString()}개</b> 지역에서 설치 가능합니다. 찾으시는 동네를 눌러주세요.</p>
+  if(type){const o=PROD[P.other];switcher=`<div style="margin:10px 0"><a class="allbtn" href="/${o.path}">${o.emoji} ${o.name} 지역 보기 →</a></div>`;}
+  else switcher=`<div class="grid2"><a class="pcard" style="background:linear-gradient(135deg,#4f8dff,#1e40af)" href="/card-terminal"><span class="pe">💳</span>카드단말기<span class="ps">시도별 보기 →</span></a><a class="pcard" style="background:linear-gradient(135deg,#2bb461,#0f5132)" href="/pos"><span class="pe">🖥️</span>포스기<span class="ps">시도별 보기 →</span></a></div>`;
+  const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",null]];
+  const inner=`<div class="sh blue"><span>${label} · 지역 선택</span></div>
+<p>설치를 원하시는 <b>시·도</b>를 먼저 선택하세요. 다음 화면에서 시군구·동을 고를 수 있어요.</p>
 ${switcher}
-<div class="idx">${idx}</div>
-${footer("","")}`;
-  return shell({title,desc,canonical,ogimg:`${SITE}/thumb/card/seoul.svg`,jsonld,body});
+<div class="sidogrid">${cards}</div>`;
+  return listShell(title,desc,`${SITE}${base}`,bc,inner);
+}
+function sidoDetail(type,slug){
+  const sido=SIDO_SLUG2NAME.get(slug); if(!sido||!SIDO_GROUPS[sido])return null;
+  const P=type?PROD[type]:null;
+  const base=type?`/${P.path}`:"/regions";
+  const names=SIDO_GROUPS[sido];
+  const sub={};const order=[];
+  for(const n of names){const info=bySlug.get(slugOf.get(n))[1];
+    let g=(sido==="기타"||!info)?slugOf.get(n)[0].toUpperCase():(info.split(" ").slice(1).join(" ")||sido);
+    if(!sub[g]){sub[g]=[];order.push(g);}sub[g].push(n);}
+  order.sort((a,b)=>a.localeCompare(b,"ko"));
+  const ppath=type?P.path:"card-terminal";
+  const idx=order.map(g=>`<div class="alpha">${esc(g)}</div>`+sub[g].map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("")).join("");
+  const heading=type?`${P.emoji} ${esc(sido)} ${P.name} 설치`:`📍 ${esc(sido)} 전체 지역`;
+  const title=type?`${sido} ${P.name} 설치 지역 | ${BRAND}`:`${sido} 전체 지역 | ${BRAND}`;
+  const desc=`${sido} 지역에서 ${type?P.name+" ":""}설치 가능한 ${names.length.toLocaleString()}개 동네 목록입니다. 우리 동네를 눌러 신청하세요.`;
+  let switcher="";
+  if(type){const o=PROD[P.other];switcher=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${slug}">${o.emoji} ${sido} ${o.name} 보기 →</a></div>`;}
+  const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",base],[sido,null]];
+  const inner=`<div class="sh blue"><span>${heading}</span></div>
+<p><b>${sido}</b> ${names.length.toLocaleString()}개 지역입니다. 찾으시는 동네를 눌러주세요.</p>
+<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>
+${switcher}
+<div class="idx">${idx}</div>`;
+  return listShell(title,desc,`${SITE}${base}/sido/${slug}`,bc,inner);
 }
 
 /* ===== 썸네일 SVG ===== */
@@ -779,6 +809,7 @@ function sitemap(){
     `<url><loc>${SITE}/regions</loc><priority>0.6</priority></url>`,
     `<url><loc>${SITE}/card-terminal</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/pos</loc><priority>0.7</priority></url>`];
+  for(const [sn,ssl] of SIDO_ORDER){if(SIDO_GROUPS[sn]&&SIDO_GROUPS[sn].length){u.push(`<url><loc>${SITE}/card-terminal/sido/${ssl}</loc><priority>0.65</priority></url>`);u.push(`<url><loc>${SITE}/pos/sido/${ssl}</loc><priority>0.65</priority></url>`);u.push(`<url><loc>${SITE}/regions/sido/${ssl}</loc><priority>0.55</priority></url>`);}}
   for(const [name] of REGIONS){const s=slugOf.get(name);
     u.push(`<url><loc>${SITE}/card-terminal/${s}</loc><priority>0.8</priority></url>`);
     u.push(`<url><loc>${SITE}/pos/${s}</loc><priority>0.8</priority></url>`);}
@@ -830,7 +861,7 @@ const llms=`# 24페이샵 (24PAYSHOP)
 `;
 function homeSchema(){return '<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
   {"@type":"Organization","@id":SITE+"/#org","name":BRAND,"url":SITE+"/","telephone":"+82-"+TELRAW,"description":"전국 카드단말기·포스기 무료 설치 전문. 무료 설치·빠른 설치·전 업종·평생 A/S."},
-  {"@type":"LocalBusiness","@id":SITE+"/#biz","name":BRAND,"image":SITE+"/thumb/card/seoul.svg","url":SITE+"/","telephone":"+82-"+TELRAW,"priceRange":"설치비 무료","areaServed":{"@type":"Country","name":"대한민국"},"openingHours":"Mo-Su 09:00-21:00","description":"카드단말기·포스기를 매장으로 방문해 설치합니다. 설치비 0원, 평생 A/S."},
+  {"@type":"LocalBusiness","@id":SITE+"/#biz","name":BRAND,"image":SITE+"/thumb/card/seoul.svg","url":SITE+"/","telephone":"+82-"+TELRAW,"priceRange":"설치비 무료","areaServed":{"@type":"Country","name":"대한민국"},"openingHours":"Mo-Su 09:00-21:00","description":"카드단말기·포스기를 매장으로 직접 찾아가 설치합니다. 설치비 0원, 평생 A/S."},
   {"@type":"WebSite","@id":SITE+"/#web","name":BRAND,"url":SITE+"/","publisher":{"@id":SITE+"/#org"}}
 ]})+'<\/script>';}
 
@@ -849,9 +880,13 @@ export default {
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
     if(path==="/llms.txt") return new Response(llms,{headers:H_TXT});
     if(path==="/sitemap.xml") return new Response(sitemap(),{headers:H_XML});
-    if(path==="/regions") return new Response(listPage(null),{headers:H_HTML});
-    if(path==="/card-terminal"&&seg.length===1) return new Response(listPage("card"),{headers:H_HTML});
-    if(path==="/pos"&&seg.length===1) return new Response(listPage("pos"),{headers:H_HTML});
+    if(path==="/regions") return new Response(sidoIndex(null),{headers:H_HTML});
+    if(path==="/card-terminal"&&seg.length===1) return new Response(sidoIndex("card"),{headers:H_HTML});
+    if(path==="/pos"&&seg.length===1) return new Response(sidoIndex("pos"),{headers:H_HTML});
+    if(seg.length===3&&seg[1]==="sido"&&(seg[0]==="card-terminal"||seg[0]==="pos"||seg[0]==="regions")){
+      const t=seg[0]==="card-terminal"?"card":seg[0]==="pos"?"pos":null;
+      const h=sidoDetail(t,seg[2]); if(h) return new Response(h,{headers:H_HTML});
+    }
     if(seg[0]==="thumb"&&seg.length===3) return new Response(thumbSvg(seg[1],seg[2].replace(/\.svg$/,"")),{headers:H_SVG});
     if((seg[0]==="card-terminal"||seg[0]==="pos")&&seg.length===2){
       const html=productPage(seg[0]==="pos"?"pos":"card",seg[1]);
