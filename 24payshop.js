@@ -39,21 +39,21 @@ const HOME_HTML = `<!DOCTYPE html>
     --sans:'Pretendard',-apple-system,system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{font-family:var(--sans);background:#000;display:flex;justify-content:center;line-height:1.55}
+  body{font-family:var(--sans);background:#e7ebf1;display:flex;justify-content:center;line-height:1.55}
   .app{width:100%;max-width:440px;min-height:100vh;position:relative;overflow:hidden;
-    background:radial-gradient(130% 30% at 50% 0,#272520,#121110 70%);
+    background:radial-gradient(130% 34% at 50% 0,#f7f9fc,#e7ebf1 72%);
     padding:26px 14px calc(var(--bar) + env(safe-area-inset-bottom) + 28px)}
   .flash{position:fixed;inset:0;max-width:440px;left:50%;transform:translateX(-50%);background:#fff;opacity:0;z-index:60;pointer-events:none;animation:flash .5s 1.15s both}
 
   .printer{position:relative;max-width:368px;margin:8px auto 0;height:58px;border-radius:14px 14px 6px 6px;
-    background:linear-gradient(180deg,#2a2823,#16140f);box-shadow:0 14px 30px -12px rgba(0,0,0,.7);
+    background:linear-gradient(180deg,#ffffff,#ece6da);box-shadow:0 10px 24px -14px rgba(0,0,0,.3);border:1px solid #e3ddce;
     display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:3}
-  .printer .pl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#8a8478}
-  .printer .rec{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#cf8a82}
+  .printer .pl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#6b6459}
+  .printer .rec{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#d6453f}
   .printer .rec i{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.3s steps(1) infinite}
-  .printer .slot{position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);width:312px;height:6px;border-radius:4px;background:#050403;box-shadow:inset 0 2px 3px #000}
+  .printer .slot{position:absolute;left:50%;bottom:-3px;transform:translateX(-50%);width:312px;height:6px;border-radius:4px;background:#d8d1c2;box-shadow:inset 0 1px 2px rgba(0,0,0,.22)}
 
-  .receipt{position:relative;max-width:352px;margin:0 auto;background:var(--paper);color:var(--ink);padding:24px 20px 30px;
+  .receipt{position:relative;max-width:352px;margin:0 auto;background:var(--paper);color:var(--ink);padding:24px 20px 30px;box-shadow:0 18px 40px -20px rgba(60,50,30,.45);
     box-shadow:0 30px 60px -22px rgba(0,0,0,.7);animation:print 1.1s .15s cubic-bezier(.2,.8,.2,1) both;transform-origin:top}
   .receipt::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:12px;
     background:linear-gradient(45deg,transparent 50%,var(--paper) 51%) 0 0/14px 12px repeat-x,
@@ -514,8 +514,8 @@ const HEAD={
  trust:["🛡️|green|안심 포인트","🛡️|green|믿고 맡기셔도 됩니다","🤝|green|이래서 안심입니다","🛡️|green|약속드리는 것","🤝|green|이래서 믿으셔도 돼요","🛡️|green|저희의 약속"],
  faq:["❓|purple|자주 묻는 질문","❓|purple|궁금한 점 모음","💬|purple|이런 걸 많이 물어보세요","❓|purple|자주 받는 질문","💬|purple|많이 묻는 질문","❓|purple|이런 게 궁금하시죠"]
 };
-function H(sk,key,fill){const a=HEAD[sk];const c=a[hash(key+"h_"+sk)%a.length].split("|");return `<div class="sh ${c[1]}"><span>${c[0]} ${esc(fill(c[2]))}</span></div>`;}
-const CALLO=[["📞 전화 한 통","⚡ 빠른 설치"],["📞 지금 전화","🚀 빠르게 방문"],["☎ 상담 한 번이면","✅ 설치 끝"],["📞 전화 주세요","⚡ 곧 설치"],["📱 문자·전화 한 번","🚀 빠른 방문 설치"],["☎ 한 통이면","✅ 상담부터 설치까지"]];
+function H(sk,key,fill){const a=HEAD[sk];const c=a[hash(key+"h_"+sk)%a.length].split("|");return `<div class="sh ${c[1]}"><span>${fill(c[0])} ${esc(fill(c[2]))}</span></div>`;}
+const CALLO=[["📞 전화 한 통","⚡ 빠른 설치"],["📞 지금 전화","🚀 바로 설치"],["☎ 상담 한 번","✅ 설치 끝"],["📞 전화 주세요","⚡ 곧 설치"],["📱 전화·문자","🚀 빠른 설치"],["☎ 한 통이면","✅ 설치까지"]];
 const CTAP=["📞 {R} {P} 전화 상담","📞 지금 {R} 상담받기","☎ {R} {P} 문의하기","📞 {R} 무료 상담받기","☎ {R} 설치 상담받기","📞 {P} 설치 문의 ({R})"];
 const NOTEP=["📌 설치 가능 여부와 정확한 조건(수수료 포함)은 전화로 빠르게 확인해 드려요.","📌 정확한 비용·수수료·일정은 매장 상황에 따라 달라지니 전화로 확인해 주세요.","📌 위 내용은 일반 안내입니다. {R} 매장에 맞는 정확한 조건은 상담 때 알려드립니다.","📌 이벤트·조건은 시기에 따라 달라질 수 있어 전화로 확인을 권합니다.","📌 자세한 비용과 설치 가능 여부는 매장 상황을 듣고 안내드립니다."];
 const STEP1=["업종·매장 환경만 알려주세요. 1분이면 끝.","어떤 매장인지 간단히 여쭤봅니다.","매장 상황만 말씀해 주시면 됩니다.","전화로 매장 상황만 들려주세요.","질문 몇 가지면 끝납니다."];
@@ -553,7 +553,7 @@ p{margin:11px 0}
 .brow{display:flex;align-items:center;gap:11px;padding:13px;border-radius:13px;margin:9px 0;background:#fff;border:1.5px solid var(--line)}
 .brow .em{font-size:22px}.brow .l{flex:1;font-weight:700;font-size:15px}.brow .l small{display:block;font-weight:500;font-size:12.5px;color:var(--dim);margin-top:1px}
 .brow .v{font-weight:800;white-space:nowrap}.brow .v.free{color:var(--red);font-size:19px}.brow .v.ok{font-size:19px}
-.callout{background:var(--ink);color:#fff;border-radius:15px;padding:17px;margin:18px 0;text-align:center;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.callout{background:var(--ink);color:#fff;border-radius:15px;padding:16px;margin:18px 0;text-align:center;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;white-space:nowrap}
 .callout .ar{color:#ffd33a}
 .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .chips span{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 5px;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px}
@@ -587,7 +587,7 @@ p{margin:11px 0}
 .sidocard{display:flex;flex-direction:column;gap:3px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;text-decoration:none;color:var(--ink)}
 .sidocard .sn{font-size:17px;font-weight:800}
 .sidocard .sc{font-size:12.5px;color:var(--dim)}
-@media(max-width:520px){.hero h1{font-size:21px}.idx{columns:1}.grid2{grid-template-columns:1fr}}
+@media(max-width:520px){.hero h1{font-size:21px}.idx{columns:1}.grid2{grid-template-columns:1fr}.callout{font-size:14px;padding:13px;gap:5px}.sidogrid{grid-template-columns:1fr}}
 `;
 
 /* ===== HTML 셸 ===== */
@@ -734,6 +734,10 @@ const SIDO_SLUG2NAME=new Map(SIDO_ORDER.map(x=>[x[1],x[0]]));
 function sidoOf(info){if(!info)return "기타";const t=info.split(" ")[0];return SIDO_NAME2SLUG.has(t)?t:"기타";}
 const SIDO_GROUPS={};
 for(const [nm,info] of REGIONS){const sd=sidoOf(info);(SIDO_GROUPS[sd]=SIDO_GROUPS[sd]||[]).push(nm);}
+const SIDO_GUGUN={};
+for(const [nm2,info2] of REGIONS){const sd=sidoOf(info2);const gg=(sd==="기타"||!info2)?"":info2.split(" ").slice(1).join(" ");(SIDO_GUGUN[sd]=SIDO_GUGUN[sd]||{});const key=gg||"__none__";(SIDO_GUGUN[sd][key]=SIDO_GUGUN[sd][key]||[]).push(nm2);}
+const GUGUN_SLUG={};
+for(const sd of Object.keys(SIDO_GUGUN)){const fwd=new Map(),rev=new Map();for(const gg of Object.keys(SIDO_GUGUN[sd])){if(gg==="__none__")continue;let bs=romanize(gg),sl=bs,i=2;while(rev.has(sl)){sl=bs+"-"+i;i++;}fwd.set(gg,sl);rev.set(sl,gg);}GUGUN_SLUG[sd]={fwd,rev};}
 function listShell(title,desc,canonical,bc,inner){
   const bcHtml=`<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
   const jsonld=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))});
@@ -756,30 +760,57 @@ ${switcher}
 <div class="sidogrid">${cards}</div>`;
   return listShell(title,desc,`${SITE}${base}`,bc,inner);
 }
-function sidoDetail(type,slug){
-  const sido=SIDO_SLUG2NAME.get(slug); if(!sido||!SIDO_GROUPS[sido])return null;
+function gugunIndex(type,sidoSlug){
+  const sido=SIDO_SLUG2NAME.get(sidoSlug); if(!sido||!SIDO_GROUPS[sido])return null;
   const P=type?PROD[type]:null;
   const base=type?`/${P.path}`:"/regions";
-  const names=SIDO_GROUPS[sido];
-  const sub={};const order=[];
-  for(const n of names){const info=bySlug.get(slugOf.get(n))[1];
-    let g=(sido==="기타"||!info)?slugOf.get(n)[0].toUpperCase():(info.split(" ").slice(1).join(" ")||sido);
-    if(!sub[g]){sub[g]=[];order.push(g);}sub[g].push(n);}
-  order.sort((a,b)=>a.localeCompare(b,"ko"));
-  const ppath=type?P.path:"card-terminal";
-  const idx=order.map(g=>`<div class="alpha">${esc(g)}</div>`+sub[g].map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("")).join("");
-  const heading=type?`${P.emoji} ${esc(sido)} ${P.name} 설치`:`📍 ${esc(sido)} 전체 지역`;
-  const title=type?`${sido} ${P.name} 설치 지역 | ${BRAND}`:`${sido} 전체 지역 | ${BRAND}`;
-  const desc=`${sido} 지역에서 ${type?P.name+" ":""}설치 가능한 ${names.length.toLocaleString()}개 동네 목록입니다. 우리 동네를 눌러 신청하세요.`;
-  let switcher="";
-  if(type){const o=PROD[P.other];switcher=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${slug}">${o.emoji} ${sido} ${o.name} 보기 →</a></div>`;}
   const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",base],[sido,null]];
-  const inner=`<div class="sh blue"><span>${heading}</span></div>
-<p><b>${sido}</b> ${names.length.toLocaleString()}개 지역입니다. 찾으시는 동네를 눌러주세요.</p>
+  let sw="";if(type){const o=PROD[P.other];sw=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${sidoSlug}">${o.emoji} ${sido} ${o.name} 보기 →</a></div>`;}
+  const guguns=Object.keys(SIDO_GUGUN[sido]).filter(g=>g!=="__none__").sort((a,b)=>a.localeCompare(b,"ko"));
+  let inner;
+  if(guguns.length){
+    const cards=guguns.map(gg=>`<a class="sidocard" href="${base}/sido/${sidoSlug}/${GUGUN_SLUG[sido].fwd.get(gg)}"><span class="sn">${esc(gg)}</span><span class="sc">${SIDO_GUGUN[sido][gg].length.toLocaleString()}개 동</span></a>`).join("");
+    inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)} · 구·시·군 선택</span></div>
+<p><b>${esc(sido)}</b>에서 설치할 <b>구·시·군</b>을 먼저 선택하세요. 다음 화면에서 동네를 고를 수 있어요.</p>
 <div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>
-${switcher}
+${sw}
+<div class="sidogrid">${cards}</div>`;
+  }else{
+    const names=(SIDO_GUGUN[sido]["__none__"]||[]).slice();
+    const sub={},order=[];
+    for(const n of names){const g=slugOf.get(n)[0].toUpperCase();if(!sub[g]){sub[g]=[];order.push(g);}sub[g].push(n);}
+    order.sort();
+    const ppath=type?P.path:"card-terminal";
+    const idx=order.map(g=>`<div class="alpha">${esc(g)}</div>`+sub[g].map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("")).join("");
+    inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)}</span></div>
+<p>${names.length.toLocaleString()}개 지역입니다. 찾으시는 동네를 눌러주세요.</p>
+<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>
+${sw}
 <div class="idx">${idx}</div>`;
-  return listShell(title,desc,`${SITE}${base}/sido/${slug}`,bc,inner);
+  }
+  const title=`${sido} ${P?P.name+" ":""}설치 지역 (구·시·군) | ${BRAND}`;
+  const desc=`${sido} ${P?P.name+" ":""}설치 — 구·시·군별로 정리한 지역 목록입니다.`;
+  return listShell(title,desc,`${SITE}${base}/sido/${sidoSlug}`,bc,inner);
+}
+function gugunDetail(type,sidoSlug,gugunSlug){
+  const sido=SIDO_SLUG2NAME.get(sidoSlug); if(!sido||!GUGUN_SLUG[sido])return null;
+  const gg=GUGUN_SLUG[sido].rev.get(gugunSlug); if(!gg)return null;
+  const names=(SIDO_GUGUN[sido][gg]||[]).slice(); if(!names.length)return null;
+  const P=type?PROD[type]:null;
+  const base=type?`/${P.path}`:"/regions";
+  const ppath=type?P.path:"card-terminal";
+  names.sort((a,b)=>a.localeCompare(b,"ko"));
+  const idx=names.map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("");
+  let sw="";if(type){const o=PROD[P.other];sw=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${sidoSlug}/${gugunSlug}">${o.emoji} ${gg} ${o.name} 보기 →</a></div>`;}
+  const title=`${sido} ${gg} ${P?P.name+" ":""}설치 | ${BRAND}`;
+  const desc=`${sido} ${gg} ${P?P.name+" ":""}설치 가능한 ${names.length.toLocaleString()}개 동 목록입니다. 우리 동네를 눌러 신청하세요.`;
+  const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",base],[sido,`${base}/sido/${sidoSlug}`],[gg,null]];
+  const inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)} ${esc(gg)}</span></div>
+<p><b>${esc(gg)}</b> ${names.length.toLocaleString()}개 동입니다. 찾으시는 동네를 눌러주세요.</p>
+<div style="margin:8px 0"><a class="allbtn" href="${base}/sido/${sidoSlug}">← ${esc(sido)} 다른 구·시·군</a></div>
+${sw}
+<div class="idx">${idx}</div>`;
+  return listShell(title,desc,`${SITE}${base}/sido/${sidoSlug}/${gugunSlug}`,bc,inner);
 }
 
 /* ===== 썸네일 SVG ===== */
@@ -810,6 +841,7 @@ function sitemap(){
     `<url><loc>${SITE}/card-terminal</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/pos</loc><priority>0.7</priority></url>`];
   for(const [sn,ssl] of SIDO_ORDER){if(SIDO_GROUPS[sn]&&SIDO_GROUPS[sn].length){u.push(`<url><loc>${SITE}/card-terminal/sido/${ssl}</loc><priority>0.65</priority></url>`);u.push(`<url><loc>${SITE}/pos/sido/${ssl}</loc><priority>0.65</priority></url>`);u.push(`<url><loc>${SITE}/regions/sido/${ssl}</loc><priority>0.55</priority></url>`);}}
+  for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl)continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd){u.push(`<url><loc>${SITE}/card-terminal/sido/${ssl}/${gsl}</loc><priority>0.7</priority></url>`);u.push(`<url><loc>${SITE}/pos/sido/${ssl}/${gsl}</loc><priority>0.7</priority></url>`);}}
   for(const [name] of REGIONS){const s=slugOf.get(name);
     u.push(`<url><loc>${SITE}/card-terminal/${s}</loc><priority>0.8</priority></url>`);
     u.push(`<url><loc>${SITE}/pos/${s}</loc><priority>0.8</priority></url>`);}
@@ -883,9 +915,12 @@ export default {
     if(path==="/regions") return new Response(sidoIndex(null),{headers:H_HTML});
     if(path==="/card-terminal"&&seg.length===1) return new Response(sidoIndex("card"),{headers:H_HTML});
     if(path==="/pos"&&seg.length===1) return new Response(sidoIndex("pos"),{headers:H_HTML});
-    if(seg.length===3&&seg[1]==="sido"&&(seg[0]==="card-terminal"||seg[0]==="pos"||seg[0]==="regions")){
+    if((seg[0]==="card-terminal"||seg[0]==="pos"||seg[0]==="regions")&&seg[1]==="sido"){
       const t=seg[0]==="card-terminal"?"card":seg[0]==="pos"?"pos":null;
-      const h=sidoDetail(t,seg[2]); if(h) return new Response(h,{headers:H_HTML});
+      let h=null;
+      if(seg.length===3) h=gugunIndex(t,seg[2]);
+      else if(seg.length===4) h=gugunDetail(t,seg[2],seg[3]);
+      if(h) return new Response(h,{headers:H_HTML});
     }
     if(seg[0]==="thumb"&&seg.length===3) return new Response(thumbSvg(seg[1],seg[2].replace(/\.svg$/,"")),{headers:H_SVG});
     if((seg[0]==="card-terminal"||seg[0]==="pos")&&seg.length===2){
