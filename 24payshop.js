@@ -629,10 +629,19 @@ function footer(otherLink,regionLinks){
 const PAL=[["#3b7df6","#1e40af"],["#249b53","#0f5132"],["#ec8a0a","#b45309"],["#875cf8","#5b21b6"],["#e5484d","#991b1b"],["#0ea5b7","#155e63"],["#d6336c","#86195a"],["#2b8a3e","#14532d"]];
 
 /* ===== 제품 상세 페이지 ===== */
-function productPage(type,slug){
-  const rec=bySlug.get(slug); if(!rec) return null;
-  const [name,region]=rec; const P=PROD[type]; const key=slug+"|"+type;
-  const LOC=region?`${region} ${name}`:name;
+function productPage(type,slug,ov){
+  const P=PROD[type];
+  let name,region,LOC,key,canonical,ogslug,bc,navBlock,otherHref;
+  if(ov){
+    name=ov.name; region=ov.region; LOC=ov.loc; key=ov.key; canonical=ov.canonical;
+    ogslug=ov.ogslug; bc=ov.bc; navBlock=ov.nav||""; otherHref=ov.otherHref;
+  }else{
+    const rec=bySlug.get(slug); if(!rec) return null;
+    name=rec[0]; region=rec[1]; LOC=region?`${region} ${name}`:name;
+    key=slug+"|"+type; canonical=`${SITE}/${P.path}/${slug}`; ogslug=slug;
+    bc=[["홈","/"],[`${P.name} 설치`,`/${P.path}`],[LOC,null]];
+    navBlock=""; otherHref=`/${PROD[P.other].path}/${slug}`;
+  }
   const fill=s=>spin(s.split("{LOC}").join(LOC).split("{R}").join(name).split("{PE}").join(P.emoji).split("{P}").join(P.name), key);
   const paras=(pool,salt,n)=>pickN(pool,n,key,salt).map(s=>`<p>${esc(fill(s))}</p>`).join("");
   const col=PAL[hash(key+"pal")%PAL.length];
@@ -645,8 +654,7 @@ function productPage(type,slug){
 
   const title=`${LOC} ${P.name} 설치 ${P.emoji} 무료설치·빠른설치 | ${BRAND}`;
   const desc=`${LOC} ${P.name} 설치는 ${BRAND}. 설치비 0원, 빠른 설치, 전 업종·평생 A/S. 전화 한 통이면 방문 설치. ☎ ${TEL}`;
-  const canonical=`${SITE}/${P.path}/${slug}`;
-  const ogimg=`${SITE}/thumb/${type}/${slug}.svg`;
+  const ogimg=`${SITE}/thumb/${type}/${ogslug}.svg`;
   const device=type==="card"?deviceCard:devicePos;
   const faqs=pickN(faqPool,6,key,"faq").map(([q,a])=>[fill(q),fill(a)]);
   const chips=pickN(INDUSTRY_CHIPS,13,key,"chips");
@@ -677,7 +685,6 @@ function productPage(type,slug){
   const secOrder=pickN(["why","area","benefit","device","pay","industry","fee","effect","trust"],9,key,"secord");
   const midBody=secOrder.map(k=>sec[k]).join("\n");
 
-  const bc=[["홈","/"],[`${P.name} 설치`,`/${P.path}`],[LOC,null]];
   const bcHtml=`<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
   const jsonld=JSON.stringify({"@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))},
@@ -685,14 +692,14 @@ function productPage(type,slug){
     {"@type":"FAQPage","mainEntity":faqs.map(([q,a])=>({"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}}))}]});
 
   const otherP=PROD[P.other];
-  const otherLink=`<div style="margin-top:6px">👉 같은 지역 <a href="/${otherP.path}/${slug}">${esc(name)} ${otherP.name} 설치</a> 도 보기</div>`;
+  const otherLink=`<div style="margin-top:6px">👉 같은 지역 <a href="${otherHref}">${esc(name)} ${otherP.name} 설치</a> 도 보기</div>`;
   const others=pickN(REGIONS,8,key,"links").filter(r=>r[0]!==name);
   const regionLinks=others.map(r=>`<a href="/${P.path}/${slugOf.get(r[0])}">${esc(r[0])}</a>`).join("");
 
   const body=`
 ${bcHtml}
 <div class="hero" style="--c1:${col[0]};--c2:${col[1]}">
-  ${photoUrl(slug,type)?`<img src="${photoUrl(slug,type)}" data-raw="${rawUrl(slug,type)}" alt="${esc(LOC)} ${P.name} 설치" loading="eager" onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw}else{this.style.display='none'}">`:""}
+  ${photoUrl(ogslug,type)?`<img src="${photoUrl(ogslug,type)}" data-raw="${rawUrl(ogslug,type)}" alt="${esc(LOC)} ${P.name} 설치" loading="eager" onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw}else{this.style.display='none'}">`:""}
   <div class="ov"><span class="tag">${P.emoji} ${P.name} 설치 · ${esc(name)}</span><h1>${esc(LOC)} ${P.name} 설치<br>무료설치 · 빠른설치 ${P.emoji}</h1></div>
 </div>
 <div class="dates">${pick(DLBL.pub,key,"dp")} <b>${kd(pub)}</b>&nbsp; · &nbsp;${pick(DLBL.mod,key,"dm")} <b>${kd(mod)}</b></div>
@@ -724,6 +731,7 @@ ${H("faq",key,fill)}
 <a class="cta" href="tel:${TELRAW}">${esc(fill(pick(CTAP,key,"cta")))} <span class="ar">▶</span></a>
 <a class="cta" href="sms:${TELRAW}" style="background:var(--blue);margin-top:8px">💬 ${esc(name)} 문자 상담 <span class="ar">▶</span></a>
 <div class="tline">＝＝＝ 24PAYSHOP · ${esc(LOC)} ＝＝＝</div>
+${navBlock}
 ${footer(otherLink,regionLinks)}`;
 
   return syn(shell({title,desc,canonical,ogimg,jsonld,body,published:iso(pub),modified:iso(mod)}),key);
@@ -741,6 +749,10 @@ const SIDO_GUGUN={};
 for(const [nm2,info2] of REGIONS){const sd=sidoOf(info2);const gg=(sd==="기타"||!info2)?"":info2.split(" ").slice(1).join(" ");(SIDO_GUGUN[sd]=SIDO_GUGUN[sd]||{});const key=gg||"__none__";(SIDO_GUGUN[sd][key]=SIDO_GUGUN[sd][key]||[]).push(nm2);}
 const GUGUN_SLUG={};
 for(const sd of Object.keys(SIDO_GUGUN)){const fwd=new Map(),rev=new Map();for(const gg of Object.keys(SIDO_GUGUN[sd])){if(gg==="__none__")continue;let bs=romanize(gg),sl=bs,i=2;while(rev.has(sl)){sl=bs+"-"+i;i++;}fwd.set(gg,sl);rev.set(sl,gg);}GUGUN_SLUG[sd]={fwd,rev};}
+// 시도/시군구 콘텐츠 페이지용 썸네일 룩업 (ogslug -> [표시명, 상위지역])
+const PLACE_THUMB=new Map();
+for(const [n,sl] of SIDO_ORDER){if(n!=="기타"&&SIDO_GROUPS[n]&&SIDO_GROUPS[n].length)PLACE_THUMB.set("sido-"+sl,[n,""]);}
+for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl||sd==="기타")continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd)PLACE_THUMB.set("gugun-"+ssl+"-"+gsl,[gg,sd]);}
 function listShell(title,desc,canonical,bc,inner){
   const bcHtml=`<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
   const jsonld=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))});
@@ -767,58 +779,75 @@ function gugunIndex(type,sidoSlug){
   const sido=SIDO_SLUG2NAME.get(sidoSlug); if(!sido||!SIDO_GROUPS[sido])return null;
   const P=type?PROD[type]:null;
   const base=type?`/${P.path}`:"/regions";
+  const guguns=Object.keys(SIDO_GUGUN[sido]).filter(g=>g!=="__none__").sort((a,b)=>a.localeCompare(b,"ko"));
+  // 카드/포스 + 실제 시도 → 4,000자 콘텐츠 페이지 + 구 네비
+  if(type&&sido!=="기타"&&guguns.length){
+    const o=PROD[P.other];
+    const navCards=guguns.map(gg=>`<a class="sidocard" href="${base}/sido/${sidoSlug}/${GUGUN_SLUG[sido].fwd.get(gg)}"><span class="sn">${esc(gg)}</span><span class="sc">${SIDO_GUGUN[sido][gg].length.toLocaleString()}개 동</span></a>`).join("");
+    const nav=`<div class="sh blue"><span>📍 ${esc(sido)} 안에서 지역 선택</span></div>
+<p><b>${esc(sido)}</b>의 구·시·군을 선택하면 동네별 ${P.name} 설치 정보를 볼 수 있어요.</p>
+<div class="sidogrid">${navCards}</div>
+<div style="margin:10px 0"><a class="allbtn" href="${base}">← 다른 시·도</a> <a class="allbtn" href="/${o.path}/sido/${sidoSlug}" style="background:var(--blue)">${o.emoji} ${esc(sido)} ${o.name}</a></div>`;
+    return productPage(type,null,{name:sido,region:"",loc:sido,key:"sido-"+sidoSlug+"|"+type,canonical:`${SITE}${base}/sido/${sidoSlug}`,ogslug:"sido-"+sidoSlug,bc:[["홈","/"],[`${P.name} 설치`,`/${P.path}`],[sido,null]],otherHref:`/${o.path}/sido/${sidoSlug}`,nav});
+  }
+  // 전체지역/기타 → 네비 전용 목록
   const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",base],[sido,null]];
   let sw="";if(type){const o=PROD[P.other];sw=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${sidoSlug}">${o.emoji} ${sido} ${o.name} 보기 →</a></div>`;}
-  const guguns=Object.keys(SIDO_GUGUN[sido]).filter(g=>g!=="__none__").sort((a,b)=>a.localeCompare(b,"ko"));
   let inner;
   if(guguns.length){
     const cards=guguns.map(gg=>`<a class="sidocard" href="${base}/sido/${sidoSlug}/${GUGUN_SLUG[sido].fwd.get(gg)}"><span class="sn">${esc(gg)}</span><span class="sc">${SIDO_GUGUN[sido][gg].length.toLocaleString()}개 동</span></a>`).join("");
-    inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)} · 구·시·군 선택</span></div>
-<p><b>${esc(sido)}</b>에서 설치할 <b>구·시·군</b>을 먼저 선택하세요. 다음 화면에서 동네를 고를 수 있어요.</p>
-<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>
-${sw}
+    inner=`<div class="sh blue"><span>${esc(sido)} · 구·시·군 선택</span></div>
+<p><b>${esc(sido)}</b>에서 구·시·군을 선택하세요.</p>
+<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>${sw}
 <div class="sidogrid">${cards}</div>`;
   }else{
     const names=(SIDO_GUGUN[sido]["__none__"]||[]).slice();
-    const sub={},order=[];
-    for(const n of names){const g=slugOf.get(n)[0].toUpperCase();if(!sub[g]){sub[g]=[];order.push(g);}sub[g].push(n);}
+    const subg={},order=[];
+    for(const n of names){const g=slugOf.get(n)[0].toUpperCase();if(!subg[g]){subg[g]=[];order.push(g);}subg[g].push(n);}
     order.sort();
     const ppath=type?P.path:"card-terminal";
-    const idx=order.map(g=>`<div class="alpha">${esc(g)}</div>`+sub[g].map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("")).join("");
-    inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)}</span></div>
+    const idx=order.map(g=>`<div class="alpha">${esc(g)}</div>`+subg[g].map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("")).join("");
+    inner=`<div class="sh blue"><span>${esc(sido)}</span></div>
 <p>${names.length.toLocaleString()}개 지역입니다. 찾으시는 동네를 눌러주세요.</p>
-<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>
-${sw}
+<div style="margin:8px 0"><a class="allbtn" href="${base}">← 다른 시·도</a></div>${sw}
 <div class="idx">${idx}</div>`;
   }
-  const title=`${sido} ${P?P.name+" ":""}설치 지역 (구·시·군) | ${BRAND}`;
-  const desc=`${sido} ${P?P.name+" ":""}설치 — 구·시·군별로 정리한 지역 목록입니다.`;
+  const title=`${sido} ${type?P.name+" ":""}설치 지역 (구·시·군) | ${BRAND}`;
+  const desc=`${sido} ${type?P.name+" ":""}설치 — 구·시·군별 지역 목록입니다.`;
   return listShell(title,desc,`${SITE}${base}/sido/${sidoSlug}`,bc,inner);
 }
 function gugunDetail(type,sidoSlug,gugunSlug){
   const sido=SIDO_SLUG2NAME.get(sidoSlug); if(!sido||!GUGUN_SLUG[sido])return null;
   const gg=GUGUN_SLUG[sido].rev.get(gugunSlug); if(!gg)return null;
   const names=(SIDO_GUGUN[sido][gg]||[]).slice(); if(!names.length)return null;
+  names.sort((a,b)=>a.localeCompare(b,"ko"));
   const P=type?PROD[type]:null;
   const base=type?`/${P.path}`:"/regions";
   const ppath=type?P.path:"card-terminal";
-  names.sort((a,b)=>a.localeCompare(b,"ko"));
-  const idx=names.map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("");
-  let sw="";if(type){const o=PROD[P.other];sw=`<div style="margin:8px 0"><a class="allbtn" href="/${o.path}/sido/${sidoSlug}/${gugunSlug}">${o.emoji} ${gg} ${o.name} 보기 →</a></div>`;}
-  const title=`${sido} ${gg} ${P?P.name+" ":""}설치 | ${BRAND}`;
-  const desc=`${sido} ${gg} ${P?P.name+" ":""}설치 가능한 ${names.length.toLocaleString()}개 동 목록입니다. 우리 동네를 눌러 신청하세요.`;
-  const bc=[["홈","/"],[type?`${P.name} 설치`:"전체 지역",base],[sido,`${base}/sido/${sidoSlug}`],[gg,null]];
-  const inner=`<div class="sh blue"><span>${P?P.emoji+" ":""}${esc(sido)} ${esc(gg)}</span></div>
-<p><b>${esc(gg)}</b> ${names.length.toLocaleString()}개 동입니다. 찾으시는 동네를 눌러주세요.</p>
-<div style="margin:8px 0"><a class="allbtn" href="${base}/sido/${sidoSlug}">← ${esc(sido)} 다른 구·시·군</a></div>
-${sw}
-<div class="idx">${idx}</div>`;
-  return listShell(title,desc,`${SITE}${base}/sido/${sidoSlug}/${gugunSlug}`,bc,inner);
+  const dongLinks=names.map(n=>`<a href="/${ppath}/${slugOf.get(n)}">${esc(n)}</a>`).join("");
+  // 카드/포스 → 4,000자 콘텐츠 페이지 + 동 네비
+  if(type){
+    const o=PROD[P.other];
+    const nav=`<div class="sh blue"><span>📍 ${esc(gg)} 동네 선택</span></div>
+<p><b>${esc(gg)}</b>의 동네를 선택하면 더 자세한 ${P.name} 설치 정보를 볼 수 있어요.</p>
+<div class="idx">${dongLinks}</div>
+<div style="margin:10px 0"><a class="allbtn" href="${base}/sido/${sidoSlug}">← ${esc(sido)} 다른 구·시·군</a> <a class="allbtn" href="/${o.path}/sido/${sidoSlug}/${gugunSlug}" style="background:var(--blue)">${o.emoji} ${esc(gg)} ${o.name}</a></div>`;
+    return productPage(type,null,{name:gg,region:sido,loc:`${sido} ${gg}`,key:"gugun-"+sidoSlug+"-"+gugunSlug+"|"+type,canonical:`${SITE}${base}/sido/${sidoSlug}/${gugunSlug}`,ogslug:"gugun-"+sidoSlug+"-"+gugunSlug,bc:[["홈","/"],[`${P.name} 설치`,`/${P.path}`],[sido,`${base}/sido/${sidoSlug}`],[gg,null]],otherHref:`/${o.path}/sido/${sidoSlug}/${gugunSlug}`,nav});
+  }
+  // 전체지역 → 네비 전용
+  const title=`${sido} ${gg} 설치 | ${BRAND}`;
+  const desc=`${sido} ${gg} 설치 가능한 ${names.length.toLocaleString()}개 동 목록입니다.`;
+  const bc=[["홈","/"],["전체 지역","/regions"],[sido,`/regions/sido/${sidoSlug}`],[gg,null]];
+  const inner=`<div class="sh blue"><span>${esc(sido)} ${esc(gg)}</span></div>
+<p><b>${esc(gg)}</b> ${names.length.toLocaleString()}개 동입니다.</p>
+<div style="margin:8px 0"><a class="allbtn" href="/regions/sido/${sidoSlug}">← ${esc(sido)} 다른 구·시·군</a></div>
+<div class="idx">${dongLinks}</div>`;
+  return listShell(title,desc,`${SITE}/regions/sido/${sidoSlug}/${gugunSlug}`,bc,inner);
 }
 
 /* ===== 썸네일 SVG ===== */
 function thumbSvg(type,slug){
-  const rec=bySlug.get(slug); const P=PROD[type]||PROD.card;
+  const rec=bySlug.get(slug)||PLACE_THUMB.get(slug); const P=PROD[type]||PROD.card;
   const name=rec?rec[0]:"전국"; const region=rec?rec[1]:"";
   const LOC=region?`${region} ${name}`:name;
   const col=PAL[hash(slug+type+"pal")%PAL.length];
