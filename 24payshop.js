@@ -27,6 +27,7 @@ const HOME_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="naver-site-verification" content="25598837ea2b6b53122530592b28515c3cdf61a8" />
+<meta name="msvalidate.01" content="76CD7730D8D678F6A94139ED4D8A344D" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>24페이샵 · 카드단말기 설치</title>
 <meta name="description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
