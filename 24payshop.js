@@ -905,6 +905,7 @@ User-agent: Bingbot
 Allow: /
 
 Sitemap: ${SITE}/sitemap.xml
+#DaumWebMasterTool:63fcdac789d520facff2d8ecdc96f26c991a1afcd2719e4e4136718817148a77:KqMtrRaDniV96GOxiqaKXg==
 `;
 const llms=`# 24페이샵 (24PAYSHOP)
 > 전국 카드단말기·포스기 무료 설치 전문. 전화 한 통이면 가까운 기사님이 방문해 설치합니다.
