@@ -949,6 +949,28 @@ const APPLE_PNG_B64="iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAcvUlEQVR4nO2
 const FAVICON_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><clipPath id="r"><rect width="64" height="64" rx="14"/></clipPath></defs><g clip-path="url(#r)"><rect width="64" height="64" fill="#1a1712"/><rect y="51.2" width="64" height="12.8" fill="#ff5a36"/></g><text x="32" y="27" font-family="Arial,Helvetica,sans-serif" font-size="32" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">24</text></svg>`;
 const binResp=(b64,ct)=>new Response(Uint8Array.from(atob(b64),c=>c.charCodeAt(0)),{headers:{"content-type":ct,"cache-control":"public,max-age=2592000"}});
 
+/* ===== IndexNow 일괄 제출용 URL 목록 ===== */
+function siteUrls(all){
+  const u=[SITE+"/",SITE+"/card-terminal",SITE+"/pos",SITE+"/regions"];
+  for(const [n,sl] of SIDO_ORDER){if(SIDO_GROUPS[n]&&SIDO_GROUPS[n].length){u.push(`${SITE}/card-terminal/sido/${sl}`);u.push(`${SITE}/pos/sido/${sl}`);u.push(`${SITE}/regions/sido/${sl}`);}}
+  for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl)continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd){u.push(`${SITE}/card-terminal/sido/${ssl}/${gsl}`);u.push(`${SITE}/pos/sido/${ssl}/${gsl}`);}}
+  if(all){for(const [name] of REGIONS){const sl=slugOf.get(name);u.push(`${SITE}/card-terminal/${sl}`);u.push(`${SITE}/pos/${sl}`);}}
+  return u;
+}
+async function indexnowSubmit(all){
+  const urls=siteUrls(all);
+  const keyLocation=`${SITE}/${INDEXNOW_KEY}.txt`, host=SITE.replace(/^https?:\/\//,"");
+  const out=[]; 
+  for(let i=0;i<urls.length;i+=5000){
+    const chunk=urls.slice(i,i+5000);
+    try{
+      const resp=await fetch("https://api.indexnow.org/indexnow",{method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body:JSON.stringify({host,key:INDEXNOW_KEY,keyLocation,urlList:chunk})});
+      out.push(`${chunk.length}건 → HTTP ${resp.status}`);
+    }catch(e){out.push(`${chunk.length}건 → 오류: ${e.message}`);}
+  }
+  return `IndexNow 제출 완료\n대상: ${all?"전체 페이지":"허브+시도+구 콘텐츠"} (${urls.length}개 URL)\n`+out.join("\n")+`\n\n* 200/202 = 성공. Bing·네이버·얀덱스에 전달됨.`;
+}
+
 export default {
   async fetch(request){
     const url=new URL(request.url);
@@ -957,6 +979,11 @@ export default {
     if(path==="/") return new Response(HOME_HTML.replace("</head>",homeSchema()+"</head>"),{headers:H_HTML});
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
     if(path===`/${INDEXNOW_KEY}.txt`) return new Response(INDEXNOW_KEY,{headers:H_TXT});
+    if(path==="/indexnow-submit"){
+      if(url.searchParams.get("key")!==INDEXNOW_KEY) return new Response("forbidden: ?key= 필요",{status:403,headers:H_TXT});
+      const msg=await indexnowSubmit(url.searchParams.get("all")==="1");
+      return new Response(msg,{headers:H_TXT});
+    }
     if(path==="/favicon.ico") return binResp(FAVICON_ICO_B64,"image/x-icon");
     if(path==="/apple-touch-icon.png") return binResp(APPLE_PNG_B64,"image/png");
     if(path==="/favicon.svg") return new Response(FAVICON_SVG,{headers:{"content-type":"image/svg+xml; charset=utf-8","cache-control":"public,max-age=2592000"}});
