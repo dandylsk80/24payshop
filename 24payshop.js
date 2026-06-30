@@ -326,6 +326,7 @@ const HOME_HTML = `<!DOCTYPE html>
 </div>
 
 <div class="callbar" style="display:flex;gap:8px;padding-left:14px;padding-right:14px"><a href="tel:01098768282" style="flex:1">📞 전화 상담</a><a href="sms:01098768282" style="flex:1;background:#3b7df6">💬 문자 상담</a></div>
+<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script>
 </body>
 </html>
 `;
@@ -618,7 +619,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
 <div class="callbar"><div class="in" style="display:flex;gap:8px"><a href="tel:${TELRAW}" style="flex:1">📞 전화 상담</a><a href="sms:${TELRAW}" style="flex:1;background:var(--blue)">💬 문자 상담</a></div></div>
-</body></html>`;
+<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script></body></html>`;
 }
 
 /* ===== 푸터 ===== */
