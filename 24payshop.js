@@ -619,7 +619,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
 <div class="callbar"><div class="in" style="display:flex;gap:8px"><a href="tel:${TELRAW}" style="flex:1">📞 전화 상담</a><a href="sms:${TELRAW}" style="flex:1;background:var(--blue)">💬 문자 상담</a></div></div>
-<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script></body></html>`;
+<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){function t(ty){try{fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:ty,page:location.pathname,ref:document.referrer})});}catch(e){}}if(location.pathname.indexOf("/api/")!==0)t("view");document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";if(h.indexOf("tel:")===0)t("tel");else if(h.indexOf("sms:")===0)t("sms");},true);})();</script></body></html>`;
 }
 
 /* ===== 푸터 ===== */
@@ -973,10 +973,12 @@ async function indexnowSubmit(all){
 }
 
 export default {
-  async fetch(request){
+  async fetch(request, env){
     const url=new URL(request.url);
     let path=decodeURIComponent(url.pathname).replace(/\/+$/,"")||"/";
     const seg=path.split("/").filter(Boolean);
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();if(env&&env.DB&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("24payshop",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+    if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(path==="/") return new Response(HOME_HTML.replace("</head>",homeSchema()+"</head>"),{headers:H_HTML});
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
     if(path===`/${INDEXNOW_KEY}.txt`) return new Response(INDEXNOW_KEY,{headers:H_TXT});
