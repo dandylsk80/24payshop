@@ -619,7 +619,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
 <div class="callbar"><div class="in" style="display:flex;gap:8px"><a href="tel:${TELRAW}" style="flex:1">📞 전화 상담</a><a href="sms:${TELRAW}" style="flex:1;background:var(--blue)">💬 문자 상담</a></div></div>
-<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){function t(ty){try{fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:ty,page:location.pathname,ref:document.referrer})});}catch(e){}}if(location.pathname.indexOf("/api/")!==0)t("view");document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";if(h.indexOf("tel:")===0)t("tel");else if(h.indexOf("sms:")===0)t("sms");},true);})();</script></body></html>`;
+<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){function t(ty){try{fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:ty,page:location.pathname,ref:document.referrer}),keepalive:true});}catch(e){}}if(location.pathname.indexOf("/api/")!==0)t("view");document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";if(h.indexOf("tel:")===0)t("tel");else if(h.indexOf("sms:")===0)t("sms");},true);})();</script></body></html>`;
 }
 
 /* ===== 푸터 ===== */
@@ -976,7 +976,7 @@ async function indexnowSubmit(all){
 /* ═════ 텔레그램 전환 알림 (전화·문자 상담 버튼 클릭) ═════ */
 const TG_TOKEN = '8101954996:AAGNV225WaNL8Zqh9OxtmP1WNzlbquNaq9s';
 const TG_CHAT  = '8649422714';
-const TG_LABEL = { tel: '전화 버튼 클릭', sms: '문자 상담 클릭' };
+const TG_LABEL = { tel: '전화 버튼 클릭', sms: '문자 상담 클릭', contact: '상담 버튼 클릭' };
 const TG_SITE   = '24페이샵';
 const TG_DOMAIN = '24payshop.com';
 const TG_ORIGIN = 'https://24payshop.com';
