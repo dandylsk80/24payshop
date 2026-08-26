@@ -974,8 +974,6 @@ async function indexnowSubmit(all){
 
 
 /* ═════ 텔레그램 전환 알림 (전화·문자 상담 버튼 클릭) ═════ */
-const TG_TOKEN = '8101954996:AAGNV225WaNL8Zqh9OxtmP1WNzlbquNaq9s';
-const TG_CHAT  = '8649422714';
 const TG_LABEL = { tel: '전화 버튼 클릭', sms: '문자 상담 클릭', contact: '상담 버튼 클릭' };
 const TG_SITE   = '24페이샵';
 const TG_DOMAIN = '24payshop.com';
@@ -1031,9 +1029,10 @@ function tgTime() {
     ' ' + z(d.getUTCHours()) + ':' + z(d.getUTCMinutes());
 }
 const TG_BOT_RE = /bot|crawl|spider|slurp|facebookexternalhit|curl|wget|python|axios|headless|lighthouse|pagespeed|semrush|ahrefs|bytespider|applebot|monitor|uptime|scan/i;
-async function tgNotify(type, page, ref, ua) {
-  if (!TG_TOKEN || TG_TOKEN.indexOf('PASTE_') === 0) return;
-  if (!TG_CHAT || TG_CHAT.indexOf('PASTE_') === 0) return;
+async function tgNotify(env, type, page, ref, ua) {
+  const TG_TOKEN = env && env.TG_TOKEN;
+  const TG_CHAT = env && env.TG_CHAT;
+  if (!TG_TOKEN || !TG_CHAT) return;
   const label = TG_LABEL[type];
   if (!label) return;
   const L = [];
@@ -1058,7 +1057,7 @@ export default {
     const url=new URL(request.url);
     let path=decodeURIComponent(url.pathname).replace(/\/+$/,"")||"/";
     const seg=path.split("/").filter(Boolean);
-    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();const ua=request.headers.get("User-Agent")||"";if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("24payshop",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();const ua=request.headers.get("User-Agent")||"";if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("24payshop",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(path==="/") return new Response(HOME_HTML.replace("</head>",homeSchema()+"</head>"),{headers:H_HTML});
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
