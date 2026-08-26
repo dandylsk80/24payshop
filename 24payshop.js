@@ -327,6 +327,7 @@ const HOME_HTML = `<!DOCTYPE html>
 
 <div class="callbar" style="display:flex;gap:8px;padding-left:14px;padding-right:14px"><a href="tel:01098768282" style="flex:1">📞 전화 상담</a><a href="sms:01098768282" style="flex:1;background:#3b7df6">💬 문자 상담</a></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script>
+<script>(function(){function t(ty){try{fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:ty,page:location.pathname,ref:document.referrer}),keepalive:true});}catch(e){}}if(location.pathname.indexOf("/api/")!==0)t("view");document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";if(h.indexOf("tel:")===0)t("tel");else if(h.indexOf("sms:")===0)t("sms");},true);})();</script>
 </body>
 </html>
 `;
