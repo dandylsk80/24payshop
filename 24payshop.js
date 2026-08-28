@@ -987,8 +987,8 @@ function tgDescribe(path){
   if(p0==='regions'){
     if(seg[1]==='sido'&&seg[2]){
       const sido=SIDO_SLUG2NAME.get(seg[2]);
-      if(sido&&seg[3]&&GUGUN_SLUG[sido]){const gg=GUGUN_SLUG[sido].rev.get(seg[3]);return sido+(gg?(' '+gg):'')+' · 전체지역';}
-      return (sido||seg[2])+' · 전체지역';
+      if(sido&&seg[3]&&GUGUN_SLUG[sido]){const gg=GUGUN_SLUG[sido].rev.get(seg[3]);return sido+(gg?(' '+gg):'')+' 카드단말기';}
+      return (sido||seg[2])+' 카드단말기';
     }
     return '전체 지역';
   }
@@ -996,11 +996,11 @@ function tgDescribe(path){
     if(seg.length===1) return prod+' 설치 · 지역 선택';
     if(seg[1]==='sido'&&seg[2]){
       const sido=SIDO_SLUG2NAME.get(seg[2]);
-      if(sido&&seg[3]&&GUGUN_SLUG[sido]){const gg=GUGUN_SLUG[sido].rev.get(seg[3]);return sido+(gg?(' '+gg):'')+' · '+prod;}
-      return (sido||seg[2])+' · '+prod;
+      if(sido&&seg[3]&&GUGUN_SLUG[sido]){const gg=GUGUN_SLUG[sido].rev.get(seg[3]);return sido+(gg?(' '+gg):'')+' '+prod;}
+      return (sido||seg[2])+' '+prod;
     }
     const rec=bySlug.get(seg[1]);
-    if(rec){const region=rec[1];const loc=region?(region+' '+rec[0]):rec[0];return loc+' · '+prod;}
+    if(rec){const region=rec[1];const loc=region?(region+' '+rec[0]):rec[0];return loc+' '+prod;}
     return prod+' 상세';
   }
   return '일반 페이지';
@@ -1041,7 +1041,7 @@ async function tgNotify(env, type, page, ref, ua) {
   L.push('');
   L.push('사이트: ' + TG_SITE + ' (' + TG_DOMAIN + ')');
   L.push('페이지: ' + TG_ORIGIN + page);
-  L.push('한글: ' + tgDescribe(page));
+  L.push('검색 키워드: ' + tgDescribe(page));
   L.push('유입: ' + tgRef(ref));
   L.push('기기: ' + (/Mobile|Android|iPhone|iPad/i.test(ua || '') ? '모바일' : 'PC'));
   L.push('시각: ' + tgTime() + ' (KST)');
