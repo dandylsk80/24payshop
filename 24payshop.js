@@ -1,3 +1,19 @@
+/* IndexNow 폴백: api.indexnow.org / www.bing.com 은 Cloudflare Workers 의 공용
+   아웃바운드 IP 에 429(TooManyRequests)를 반환하는 경우가 많다. IndexNow 는 참여
+   엔드포인트 한 곳만 성공하면 나머지 엔진으로 전파되므로 순차 폴백한다. */
+const INDEXNOW_FALLBACK_EPS = ["https://api.indexnow.org/indexnow","https://yandex.com/indexnow","https://search.seznam.cz/indexnow"];
+async function indexnowFetch(opt){
+  let last=null;
+  for(const ep of INDEXNOW_FALLBACK_EPS){
+    try{
+      const r=await fetch(ep,opt);
+      if(r.status>=200&&r.status<300) return r;
+      last=r;
+    }catch(e){}
+  }
+  return last||{status:0};
+}
+
 /* 대시보드 방문자 집계용 봇 UA 필터 (크롤러를 방문자로 세지 않기 위함) */
 const BOT_UA_RE = /bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|baidu|duckduckbot|facebookexternalhit|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|headlesschrome|python-requests|curl|wget|yeti|daumoa|lighthouse|pagespeed|inspectiontool|googleother|applebot|amazonbot|archiver|scrapy|node-fetch|okhttp|go-http|libwww|httpclient|dataforseo|serpstat|zoominfo|bubing|linkdex/i;
 // 24payshop.js — Cloudflare Worker (전체 사이트 동적 생성)
@@ -968,7 +984,7 @@ async function indexnowSubmit(all){
   for(let i=0;i<urls.length;i+=5000){
     const chunk=urls.slice(i,i+5000);
     try{
-      const resp=await fetch("https://api.indexnow.org/indexnow",{method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body:JSON.stringify({host,key:INDEXNOW_KEY,keyLocation,urlList:chunk})});
+      const resp=await indexnowFetch({method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body:JSON.stringify({host,key:INDEXNOW_KEY,keyLocation,urlList:chunk})});
       out.push(`${chunk.length}건 → HTTP ${resp.status}`);
     }catch(e){out.push(`${chunk.length}건 → 오류: ${e.message}`);}
   }
