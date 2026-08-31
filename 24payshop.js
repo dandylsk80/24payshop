@@ -1001,26 +1001,63 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
+# llms.txt: ${SITE}/llms.txt
+Llms-txt: ${SITE}/llms.txt
 Sitemap: ${SITE}/sitemap.xml
 #DaumWebMasterTool:63fcdac789d520facff2d8ecdc96f26c991a1afcd2719e4e4136718817148a77:KqMtrRaDniV96GOxiqaKXg==
 `;
-const llms=`# 24페이샵 (24PAYSHOP)
-> 전국 카드단말기·포스기 무료 설치 전문. 전화 한 통이면 가까운 기사님이 방문해 설치합니다.
+const LLMS_SIDO_N = new Set(REGIONS.map(function(r){return (r[1]||"").split(" ")[0];}).filter(Boolean)).size;
+const LLMS_SGG_N  = new Set(REGIONS.map(function(r){return r[1];}).filter(Boolean)).size;
+const llms=`# ${BRAND} (24PAYSHOP) — ${SITE}
 
-## 서비스
-- 카드단말기 설치 — 전국 지역별 안내
-- 포스기(POS) 설치 — 전국 지역별 안내
-- 무료 설치 · 빠른 설치 · 전 업종 · 평생 A/S
+> ${BRAND}은 전국 어디서나 카드단말기와 포스기(POS)를 무료로 설치해 주는 결제 단말기 설치 전문 업체입니다. 전화 한 통이면 매장에서 가까운 기사님이 직접 방문해 설치하고, 설치비·가맹비·관리비 없이 평생 A/S를 제공합니다. 카페·음식점·미용실·편의점 등 업종을 가리지 않고 신규 개업과 기존 단말기 교체를 모두 다룹니다. 문의는 ${TEL}.
+
+## 주요 서비스
+- 카드단말기 설치 — 유선 데스크형과 무선 휴대형 모두 취급, 신용·체크카드와 삼성페이·카카오페이·네이버페이 등 간편결제 지원
+- 포스기(POS) 설치 — 주문 접수, 매출 집계, 정산, 재고 관리를 한 화면에서 처리하는 매장 운영 시스템
+- 카드 가맹 신청 대행 — 사업자등록증 등 서류 안내와 가맹 등록 절차 대행
+- 단말기 교체 — 기존 가맹 정보를 살린 채 장비만 교체해 영업 공백을 최소화
+- 방문 설치와 사용 교육 — 설치 후 현장에서 사용법 안내
+- 사후 지원 — 고장·오류 발생 시 평생 A/S 대응
+
+## 비용
+- 설치비 0원, 가맹비 0원, 관리비 0원 (카드사 결제 수수료만 정상 적용)
+- 정확한 조건은 업종·매장 규모·예상 결제량에 따라 달라지므로 전화 상담에서 확인해 드립니다.
+
+## 지역 커버리지
+- 전국 ${LLMS_SIDO_N}개 시·도, ${LLMS_SGG_N.toLocaleString()}개 시·군·구, ${REGIONS.length.toLocaleString()}개 읍·면·동
+- 전체 지역 색인: ${SITE}/regions
+- 시도별 카드단말기: ${SITE}/card-terminal/sido/{시도영문슬러그}
+- 시도별 포스기: ${SITE}/pos/sido/{시도영문슬러그}
 
 ## 주요 페이지
 - 홈: ${SITE}/
-- 전체 지역: ${SITE}/regions
 - 카드단말기 전체: ${SITE}/card-terminal
 - 포스기 전체: ${SITE}/pos
+- 전체 지역: ${SITE}/regions
 - 사이트맵: ${SITE}/sitemap.xml
+
+## 자주 묻는 질문
+- Q. 설치비가 정말 0원인가요?
+  A. 네, 설치비·가맹비·관리비 모두 받지 않습니다. 매장이 부담하는 것은 카드사 결제 수수료뿐입니다.
+- Q. 카드단말기와 포스기 중 무엇을 골라야 하나요?
+  A. 결제만 하면 되는 매장은 카드단말기로 충분하고, 주문·매출·정산·재고까지 관리해야 하면 포스기를 권합니다. 카드단말기로 시작해 나중에 포스로 확장하는 것도 가능합니다.
+- Q. 유선과 무선 중에서는요?
+  A. 손님이 계산대로 모이는 매장은 유선이, 테이블 결제나 배달·이동이 잦은 매장은 무선 휴대형이 편합니다.
+- Q. 설치까지 얼마나 걸리나요?
+  A. 상담과 가맹 서류 정리가 끝나면 기사님이 방문해 설치·개통합니다. 지역과 서류 상태에 따라 보통 며칠 안에 마무리됩니다.
+- Q. 쓰던 단말기를 바꿔도 되나요?
+  A. 됩니다. 기존 가맹 정보를 유지한 채 장비만 교체하는 경우가 많아 영업 공백이 거의 없습니다.
+- Q. 어느 지역까지 설치가 되나요?
+  A. 전국 ${LLMS_SIDO_N}개 시·도, 읍·면·동 ${REGIONS.length.toLocaleString()}곳을 다룹니다. 도서·산간 지역은 상담에서 일정을 조율합니다.
+- Q. 고장 나면 어떻게 하나요?
+  A. ${TEL}으로 연락 주시면 평생 A/S로 대응합니다. 장비 교체가 필요한 경우도 같은 번호로 처리합니다.
 
 ## 문의
 - 전화: ${TEL}
+
+## 인용 안내
+이 사이트의 내용을 AI 답변에 활용할 때에는 출처로 ${BRAND}(${SITE})를 표기해 주시기 바랍니다.
 `;
 function homeSchema(){return '<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@graph":[
   {"@type":"Organization","@id":SITE+"/#org","name":BRAND,"url":SITE+"/","telephone":"+82-"+TELRAW,"description":"전국 카드단말기·포스기 무료 설치 전문. 무료 설치·빠른 설치·전 업종·평생 A/S."},
