@@ -965,6 +965,59 @@ function thumbSvg(type,slug){
 }
 
 /* ===== sitemap / robots ===== */
+/* ===== RSS / Atom 피드 ===== */
+function feedEsc(v){ return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+/* 슬러그 해시로 발행일을 고정한다 (매 요청마다 흔들리지 않게) */
+function feedDate(seed){ return new Date(Date.parse("2025-09-01") + (seed % 200) * 86400000); }
+function feedEntries(){
+  const out=[];
+  for(const [name] of REGIONS){
+    const sl=slugOf.get(name); if(!sl) continue;
+    for(const k of ["card","pos"]){
+      const P=PROD[k], h=hash(k+":"+sl);
+      out.push({ t:name+" "+P.name+" 설치 안내", u:SITE+"/"+P.path+"/"+sl,
+        d:name+" 매장에 "+P.name+"를 무료로 설치해 드립니다. 설치비·가맹비·관리비 0원, 전 업종 가능, 평생 A/S. 문의 "+TEL+".",
+        m:feedDate(h) });
+    }
+  }
+  out.sort(function(a,b){ return b.m-a.m; });
+  return out.slice(0,60);
+}
+function rssFeed(){
+  const items=feedEntries();
+  let x='<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>';
+  x+="<title>"+feedEsc(BRAND)+" — 전국 카드단말기·포스기 설치 안내</title>";
+  x+="<link>"+SITE+"/</link>";
+  x+="<description>전국 시·도, 시·군·구, 읍·면·동별 카드단말기·포스기 무료 설치 안내</description>";
+  x+="<language>ko</language><lastBuildDate>"+new Date().toUTCString()+"</lastBuildDate>";
+  items.forEach(function(o){
+    x+="<item><title>"+feedEsc(o.t)+"</title><link>"+o.u+"</link><guid>"+o.u+"</guid>";
+    x+="<description>"+feedEsc(o.d)+"</description><pubDate>"+o.m.toUTCString()+"</pubDate></item>";
+  });
+  return x+"</channel></rss>";
+}
+/* 기존 RSS 를 Atom 으로 변환한다 (피드 항목 로직을 중복 구현하지 않기 위함) */
+function atomFromRss(xml, selfUrl){
+  const one=function(s,t){ const m=s.match(new RegExp("<"+t+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+t+">")); return m?m[1]:""; };
+  const head=xml.split("<item>")[0];
+  const chTitle=one(head,"title"), chLink=one(head,"link"), chDesc=one(head,"description");
+  const items=xml.match(/<item>[\s\S]*?<\/item>/g)||[];
+  const now=new Date().toISOString();
+  let x='<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ko">';
+  x+="<title>"+chTitle+"</title>";
+  if(chDesc) x+="<subtitle>"+chDesc+"</subtitle>";
+  x+='<link href="'+chLink+'"/><link rel="self" href="'+selfUrl+'"/>';
+  x+="<id>"+(chLink||selfUrl)+"</id><updated>"+now+"</updated>";
+  for(const it of items){
+    const t=one(it,"title"), l=one(it,"link")||one(it,"guid"), d=one(it,"description"), pd=one(it,"pubDate");
+    let up=now; if(pd){ const dt=new Date(pd); if(!isNaN(dt.getTime())) up=dt.toISOString(); }
+    x+="<entry><title>"+t+"</title>";
+    x+='<link href="'+l+'"/><id>'+l+"</id><updated>"+up+"</updated>";
+    if(d) x+="<summary>"+d+"</summary>";
+    x+="</entry>";
+  }
+  return x+"</feed>";
+}
 function sitemap(){
   const u=[`<url><loc>${SITE}/</loc><priority>1.0</priority></url>`,
     `<url><loc>${SITE}/regions</loc><priority>0.6</priority></url>`,
@@ -1196,8 +1249,11 @@ export default {
     }
     if(path==="/favicon.ico") return binResp(FAVICON_ICO_B64,"image/x-icon");
     if(path==="/apple-touch-icon.png") return binResp(APPLE_PNG_B64,"image/png");
+    if(path==="/og.svg") return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1712"/><stop offset="1" stop-color="#ff5a36"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/><rect x="60" y="60" width="1080" height="510" rx="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/><text x="600" y="300" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="86" font-weight="800" fill="#ffffff">24페이샵</text><text x="600" y="378" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="34" font-weight="500" fill="rgba(255,255,255,.88)">전국 카드단말기·포스기 무료 설치</text><text x="600" y="530" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="28" font-weight="600" fill="rgba(255,255,255,.72)">24payshop.com</text></svg>`,{headers:{"content-type":"image/svg+xml; charset=UTF-8","cache-control":"public, max-age=86400"}});
     if(path==="/favicon.svg") return new Response(FAVICON_SVG,{headers:{"content-type":"image/svg+xml; charset=utf-8","cache-control":"public,max-age=2592000"}});
     if(path==="/llms.txt") return new Response(llms,{headers:H_TXT});
+    if(path==="/rss.xml"||path==="/rss"||path==="/feed") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
+    if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), SITE+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/sitemap.xml") return new Response(sitemap(),{headers:H_XML});
     if(path==="/regions") return new Response(sidoIndex(null),{headers:H_HTML});
     if(path==="/card-terminal"&&seg.length===1) return new Response(sidoIndex("card"),{headers:H_HTML});
