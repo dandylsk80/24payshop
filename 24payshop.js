@@ -1331,6 +1331,8 @@ async function tgNotify(env, type, page, ref, ua) {
 }
 
 export default {
+  /* 매일 1회 IndexNow 자동 제출 (cron 은 wrangler.toml [triggers]) */
+  async scheduled(event, env, ctx){ ctx.waitUntil(indexnowSubmit(false)); },
   async fetch(request, env, ctx){
     const url=new URL(request.url);
     let path=decodeURIComponent(url.pathname).replace(/\/+$/,"")||"/";
