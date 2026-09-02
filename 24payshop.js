@@ -485,6 +485,7 @@ const HOME_HTML = `<!DOCTYPE html>
     <div class="fbrand">24<span class="pay">pay</span>shop</div>
     <div>카드단말기 · 포스기 설치 전문</div>
     <div>대표전화 <a href="tel:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 문자 <a href="sms:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
+    <div><a href="/regions">전체 지역</a> &nbsp;|&nbsp; <a href="/list">전체 목록</a></div>
     <div class="fcopy">© 2026 24PAYSHOP</div>
   </footer>
 </div>
@@ -932,6 +933,26 @@ function listShell(title,desc,canonical,bc,inner){
   const jsonld=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))});
   return shell({title,desc,canonical,ogimg:`${SITE}/thumb/card/seoul.svg`,jsonld,body:`${bcHtml}${inner}${footer("","")}`});
 }
+function pageList(){
+  let secs="";
+  for(const [sn,ssl] of SIDO_ORDER){
+    const grp=SIDO_GROUPS[sn];
+    if(!grp||!grp.length) continue;
+    const gg=Array.from((GUGUN_SLUG[sn]&&GUGUN_SLUG[sn].fwd)||[]);
+    const guns=gg.map(x=>`<a class="sidocard" href="/card-terminal/sido/${ssl}/${x[1]}"><span class="sn">${esc(x[0])}</span></a>`).join("");
+    secs+=`<div class="sh blue"><span>📍 ${esc(sn)}</span></div>`
+      +`<p style="margin:0 0 8px"><a href="/regions/sido/${ssl}">${esc(sn)} 전체 지역</a> · <a href="/card-terminal/sido/${ssl}">카드단말기</a> · <a href="/pos/sido/${ssl}">포스기</a> <b style="color:#888;font-weight:500">(${grp.length.toLocaleString()}개 동네)</b></p>`
+      +(guns?`<div class="sidogrid">${guns}</div>`:"");
+  }
+  const inner=`<div class="sh blue"><span>📑 전체 목록</span></div>
+<p>${BRAND}의 제품·지역 페이지를 한곳에 모았습니다. 시·군·구를 누르면 그 지역의 동네 목록으로 이어집니다.</p>
+<div class="grid2"><a class="pcard" style="background:linear-gradient(135deg,#4f8dff,#1e40af)" href="/card-terminal"><span class="pe">💳</span>카드단말기<span class="ps">시도별 보기 →</span></a><a class="pcard" style="background:linear-gradient(135deg,#2bb461,#0f5132)" href="/pos"><span class="pe">🖥️</span>포스기<span class="ps">시도별 보기 →</span></a></div>
+<p style="margin:12px 0"><a class="allbtn" href="/regions">📍 전체 지역 색인 →</a></p>
+${secs}<script type="application/ld+json">${JSON.stringify({"@context":"https://schema.org","@type":"CollectionPage","name":"전체 목록","url":SITE+"/list","isPartOf":{"@type":"WebSite","name":BRAND,"url":SITE+"/"}})}<\/script>`;
+  return listShell(`전체 목록 — 제품·지역 색인 | ${BRAND}`,
+    `${BRAND}의 카드단말기·포스기 제품 페이지와 전국 시·도·시·군·구 페이지를 모은 전체 목록.`,
+    `${SITE}/list`, [["홈","/"],["전체 목록",null]], inner);
+}
 function sidoIndex(type){
   const P=type?PROD[type]:null;
   const base=type?`/${P.path}`:"/regions";
@@ -1096,6 +1117,7 @@ function atomFromRss(xml, selfUrl){
 }
 function sitemap(){
   const u=[`<url><loc>${SITE}/</loc><priority>1.0</priority></url>`,
+    `<url><loc>${SITE}/list</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/regions</loc><priority>0.6</priority></url>`,
     `<url><loc>${SITE}/card-terminal</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/pos</loc><priority>0.7</priority></url>`];
@@ -1132,6 +1154,7 @@ Allow: /
 
 # llms.txt: ${SITE}/llms.txt
 Llms-txt: ${SITE}/llms.txt
+# 전체 목록: ${SITE}/list
 Sitemap: ${SITE}/sitemap.xml
 #DaumWebMasterTool:63fcdac789d520facff2d8ecdc96f26c991a1afcd2719e4e4136718817148a77:KqMtrRaDniV96GOxiqaKXg==
 `;
@@ -1207,7 +1230,7 @@ const binResp=(b64,ct)=>new Response(Uint8Array.from(atob(b64),c=>c.charCodeAt(0
 
 /* ===== IndexNow 일괄 제출용 URL 목록 ===== */
 function siteUrls(all){
-  const u=[SITE+"/",SITE+"/card-terminal",SITE+"/pos",SITE+"/regions"];
+  const u=[SITE+"/",SITE+"/list",SITE+"/card-terminal",SITE+"/pos",SITE+"/regions"];
   for(const [n,sl] of SIDO_ORDER){if(SIDO_GROUPS[n]&&SIDO_GROUPS[n].length){u.push(`${SITE}/card-terminal/sido/${sl}`);u.push(`${SITE}/pos/sido/${sl}`);u.push(`${SITE}/regions/sido/${sl}`);}}
   for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl)continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd){u.push(`${SITE}/card-terminal/sido/${ssl}/${gsl}`);u.push(`${SITE}/pos/sido/${ssl}/${gsl}`);}}
   if(all){for(const [name] of REGIONS){const sl=slugOf.get(name);u.push(`${SITE}/card-terminal/${sl}`);u.push(`${SITE}/pos/${sl}`);}}
@@ -1331,6 +1354,7 @@ export default {
     if(path==="/rss.xml"||path==="/rss"||path==="/feed") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), SITE+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/sitemap.xml") return new Response(sitemap(),{headers:H_XML});
+    if(path==="/list") return new Response(pageList(),{headers:H_HTML});
     if(path==="/regions") return new Response(sidoIndex(null),{headers:H_HTML});
     if(path==="/card-terminal"&&seg.length===1) return new Response(sidoIndex("card"),{headers:H_HTML});
     if(path==="/pos"&&seg.length===1) return new Response(sidoIndex("pos"),{headers:H_HTML});
