@@ -1081,7 +1081,7 @@ function feedEntries(){
       const P=PROD[k], h=hash(k+":"+sl);
       out.push({ t:name+" "+P.name+" 설치 안내", u:SITE+"/"+P.path+"/"+sl,
         d:name+" 매장에 "+P.name+"를 무료로 설치해 드립니다. 설치비·가맹비·관리비 0원, 전 업종 가능, 평생 A/S. 문의 "+TEL+".",
-        m:feedDate(h) });
+        m:rssRankDate(SITE+"/"+P.path+"/"+sl) });
     }
   }
   out.sort(function(a,b){ return b.m-a.m; });
@@ -1131,6 +1131,13 @@ function smLastmod(key){
   const off = smHash(key) % SM_PERIOD;
   const periods = Math.floor((Date.now()/SM_DAY - off)/SM_PERIOD);
   return new Date((periods*SM_PERIOD + off)*SM_DAY).toISOString().slice(0,10);
+}
+/* RSS 정렬용 날짜: URL 마다 60일 주기로 밀린다. 매일 다른 1/60 묶음이 최신이 되어
+   "최근 항목 위주"를 유지하면서 피드가 날마다 바뀐다. */
+function rssRankDate(u){
+  const off = smHash(u) % 60;
+  const periods = Math.floor((Date.now()/SM_DAY - off)/60);
+  return new Date((periods*60 + off)*SM_DAY);
 }
 /* <loc> 뒤에 lastmod 가 없으면 채워 넣는다 (loc → lastmod → changefreq → priority 순서 유지) */
 function smAddLastmod(xml){
