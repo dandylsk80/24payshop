@@ -868,7 +868,14 @@ function productPage(type,slug,ov){
 
   const otherP=PROD[P.other];
   const otherLink=`<div style="margin-top:6px">👉 같은 지역 <a href="${otherHref}">${esc(name)} ${otherP.name} 설치</a> 도 보기</div>`;
-  const others=pickN(REGIONS,8,key,"links").filter(r=>r[0]!==name);
+  /* 주변 지역: 같은 시·군·구 → 같은 시·도 순으로 12개를 채운다 (예전에는 전국 무작위 8개였다) */
+  const sidoOf=x=>String(x||"").split(" ")[0];
+  const mySido=sidoOf(region);
+  const others=[]; const _seen=new Set([name]);
+  const _take=list=>{ for(const r of list){ if(others.length>=12) return true; if(_seen.has(r[0])) continue; _seen.add(r[0]); others.push(r); } return others.length>=12; };
+  if(region) _take(REGIONS.filter(r=>r[1]===region));
+  if(others.length<12 && mySido) _take(REGIONS.filter(r=>r[1]!==region && sidoOf(r[1])===mySido));
+  if(others.length<12) _take(pickN(REGIONS,12,key,"links"));
   const regionLinks=others.map(r=>`<a href="/${P.path}/${slugOf.get(r[0])}">${esc(r[0])}</a>`).join("");
 
   const body=`
