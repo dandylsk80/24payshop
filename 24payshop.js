@@ -1163,6 +1163,7 @@ Allow: /
 
 User-agent: GPTBot
 Allow: /
+Crawl-delay: 10
 
 User-agent: OAI-SearchBot
 Allow: /
@@ -1181,6 +1182,30 @@ Allow: /
 
 User-agent: Bingbot
 Allow: /
+
+# SEO 분석 크롤러 — 색인에 도움 안 되므로 차단
+User-agent: SemrushBot
+Disallow: /
+User-agent: AhrefsBot
+Disallow: /
+User-agent: AhrefsSiteAudit
+Disallow: /
+User-agent: MJ12bot
+Disallow: /
+User-agent: DotBot
+Disallow: /
+User-agent: DataForSeoBot
+Disallow: /
+User-agent: BLEXBot
+Disallow: /
+User-agent: rogerbot
+Disallow: /
+User-agent: SEOkicks
+Disallow: /
+User-agent: Barkrowler
+Disallow: /
+User-agent: serpstatbot
+Disallow: /
 
 # llms.txt: ${SITE}/llms.txt
 Llms-txt: ${SITE}/llms.txt
