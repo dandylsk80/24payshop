@@ -226,7 +226,7 @@ if (wanted("콘텐츠") && pages.length) {
 if (wanted("seo") || wanted("SEO")) {
   group("SEO", "5. SEO");
   const titles = new Map();
-  let tl = [], dl = [], can = [], h1 = [], og = [], lang = [], vp = [], toss = [];
+  let tl = [], dl = [], can = [], h1 = [], og = [], lang = [], vp = [], toss = [], tossD = [];
   for (const { p, html } of pages) {
     const t = attr(html, /<title>([\s\S]*?)<\/title>/);
     const d = attr(html, /<meta name="description" content="([^"]*)"/);
@@ -240,7 +240,15 @@ if (wanted("seo") || wanted("SEO")) {
     if (!html.includes('name="twitter:card"')) og.push(`${p} twitter:card`);
     if (!/<html lang="ko">/.test(html)) lang.push(p);
     if (!/name="viewport"/.test(html)) vp.push(p);
-    if (t && !t.includes("토스단말기")) toss.push(p);
+    /* 그냥 "포함" 만 보면 상품명 뒤로 밀려도 통과한다. 지역명 바로 뒤에
+       와야 하므로 시작 문자열로 확인한다. LOC 은 브레드크럼 마지막 항목. */
+    const g2 = ldBlocks(html).flatMap(b => { try { const j = JSON.parse(b); return j["@graph"] || [j]; } catch { return []; } });
+    const LOC = g2.find(x => x["@type"] === "BreadcrumbList")?.itemListElement?.at(-1)?.name;
+    if (!LOC) toss.push(`${p} 브레드크럼에서 지역명을 못 얻음`);
+    else {
+      if (!t || !t.startsWith(`${LOC} 토스단말기`)) toss.push(`${p} title="${t?.slice(0, 40)}…"`);
+      if (!d || !d.startsWith(`${LOC} 토스단말기`)) tossD.push(`${p} desc="${d?.slice(0, 40)}…"`);
+    }
     if (t) titles.set(t, (titles.get(t) || 0) + 1);
   }
   const rep = (arr, msg) => arr.length ? arr.slice(0, 3).forEach(w => fail(msg, w)) : ok(`${msg} (${pages.length}p)`);
@@ -251,7 +259,8 @@ if (wanted("seo") || wanted("SEO")) {
   rep(og, "og:* + twitter:card 완비");
   rep(lang, 'html lang="ko"');
   rep(vp, "viewport 메타");
-  rep(toss, "title 에 토스단말기 언급");
+  rep(toss, "title 이 '지역명 토스단말기' 로 시작");
+  rep(tossD, "meta description 이 '지역명 토스단말기' 로 시작");
   const dup = [...titles].filter(([, n]) => n > 1);
   dup.length ? dup.slice(0, 3).forEach(([t, n]) => fail("title 중복", `${n}회 "${t}"`)) : ok("title 표본 내 중복 없음");
 }
