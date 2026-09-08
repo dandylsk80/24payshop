@@ -226,7 +226,7 @@ if (wanted("콘텐츠") && pages.length) {
 if (wanted("seo") || wanted("SEO")) {
   group("SEO", "5. SEO");
   const titles = new Map();
-  let tl = [], dl = [], can = [], h1 = [], og = [], lang = [], vp = [], toss = [], tossD = [];
+  let tl = [], dl = [], can = [], h1 = [], og = [], lang = [], vp = [], toss = [], tossD = [], tossH = [], tossB = [];
   for (const { p, html } of pages) {
     const t = attr(html, /<title>([\s\S]*?)<\/title>/);
     const d = attr(html, /<meta name="description" content="([^"]*)"/);
@@ -248,6 +248,12 @@ if (wanted("seo") || wanted("SEO")) {
     else {
       if (!t || !t.startsWith(`${LOC} 토스단말기`)) toss.push(`${p} title="${t?.slice(0, 40)}…"`);
       if (!d || !d.startsWith(`${LOC} 토스단말기`)) tossD.push(`${p} desc="${d?.slice(0, 40)}…"`);
+      /* 화면 큰 제목과 히어로 배지. title 만 고치고 화면을 안 고치는 실수가
+         쉬워서 따로 본다. h1 안엔 <br> 이 있으니 태그를 벗겨 비교한다. */
+      const h1t = text(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] || "");
+      if (!h1t.startsWith(`${LOC} 토스단말기`)) tossH.push(`${p} h1="${h1t.slice(0, 40)}…"`);
+      const badge = text(html.match(/<span class="tag">([\s\S]*?)<\/span>/)?.[1] || "");
+      if (!badge.includes("토스단말기")) tossB.push(`${p} badge="${badge.slice(0, 40)}…"`);
     }
     if (t) titles.set(t, (titles.get(t) || 0) + 1);
   }
@@ -261,6 +267,8 @@ if (wanted("seo") || wanted("SEO")) {
   rep(vp, "viewport 메타");
   rep(toss, "title 이 '지역명 토스단말기' 로 시작");
   rep(tossD, "meta description 이 '지역명 토스단말기' 로 시작");
+  rep(tossH, "h1 이 '지역명 토스단말기' 로 시작");
+  rep(tossB, "히어로 배지에 토스단말기 포함");
   const dup = [...titles].filter(([, n]) => n > 1);
   dup.length ? dup.slice(0, 3).forEach(([t, n]) => fail("title 중복", `${n}회 "${t}"`)) : ok("title 표본 내 중복 없음");
 }

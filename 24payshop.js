@@ -954,7 +954,7 @@ function productPage(type,slug,ov){
 ${bcHtml}
 <div class="hero" style="--c1:${col[0]};--c2:${col[1]}">
   ${photoUrl(ogslug,type)?`<img src="${photoUrl(ogslug,type)}" data-raw="${rawUrl(ogslug,type)}" alt="${esc(LOC)} ${P.name} 설치" loading="eager" onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw}else{this.style.display='none'}">`:""}
-  <div class="ov"><span class="tag">${P.emoji} ${P.name} 설치 · ${esc(name)}</span><h1>${esc(LOC)} ${P.name} 설치<br>무료설치 · 빠른설치 ${P.emoji}</h1></div>
+  <div class="ov"><span class="tag">${P.emoji} 토스단말기·${P.name} 설치 · ${esc(name)}</span><h1>${esc(LOC)} 토스단말기·${P.name} 설치<br>무료설치 · 빠른설치 ${P.emoji}</h1></div>
 </div>
 <div class="dates">${pick(DLBL.pub,key,"dp")} <b>${kd(pub)}</b>&nbsp; · &nbsp;${pick(DLBL.mod,key,"dm")} <b>${kd(mod)}</b></div>
 
