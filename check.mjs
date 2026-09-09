@@ -77,6 +77,10 @@ const PRODS = {
                      faqMin: 8, extraFaq: { word: "토스", min: 2, max: 3 }, lead: "토스단말기" },
   "kiosk":         { name: "키오스크",   secs:  9, h2: "메뉴",       h2len: [400, 800],
                      faqMin: 8, extraFaq: null,                              lead: "키오스크" },
+  "table-order":   { name: "테이블오더", secs:  8, h2: "포스",       h2len: [380, 800],
+                     faqMin: 8, extraFaq: null,                              lead: "테이블오더" },
+  "vending":       { name: "자동판매기", secs:  9, h2: "재고",       h2len: [380, 800],
+                     faqMin: 8, extraFaq: null,                              lead: "자동판매기" },
 };
 const PATHS = Object.keys(PRODS);
 const PROD_RE = new RegExp(`^/(${PATHS.join("|")})/[^/]+$`);
