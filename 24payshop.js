@@ -2244,6 +2244,38 @@ function gugunDetail(type,sidoSlug,gugunSlug){
   return listShell(title,desc,`${SITE}/regions/sido/${sidoSlug}/${gugunSlug}`,bc,inner);
 }
 
+/* ===== 한글 경로 → 영문 슬러그 301 =====
+   슬러그는 처음부터 영문이었지만, 한글 주소로 걸린 링크나 색인이 404 로 죽지
+   않도록 영구 이동으로 넘겨준다. 라우터가 pathname 을 이미 디코딩하므로
+   %ED%95%9C%EA%B8%80 형태로 들어와도 여기서 같은 값으로 잡힌다. */
+function koPath(seg){
+  if(!seg.length) return null;
+  const hasKo=s=>/[\uac00-\ud7a3]/.test(s||"");
+  if(!seg.some(hasKo)) return null;                       /* 이미 영문이면 건드리지 않는다 */
+  const head=seg[0];
+  const base=PATH2TYPE.has(head)?head:(head==="regions"?"regions":null);
+  if(!base) return null;
+  /* /{제품}/{한글 동네} */
+  if(seg.length===2&&hasKo(seg[1])){
+    const sl=slugOf.get(seg[1]);
+    return sl?`/${base}/${sl}`:null;
+  }
+  /* /{제품}/sido/{한글 시도}[/{한글 구·시·군}] */
+  if(seg[1]==="sido"&&seg.length>=3){
+    const sido=hasKo(seg[2])?SIDO_SLUG2NAME.has(seg[2])?null:seg[2]:null;
+    const ssl=hasKo(seg[2])?SIDO_NAME2SLUG.get(seg[2]):seg[2];
+    if(!ssl) return null;
+    if(seg.length===3) return `/${base}/sido/${ssl}`;
+    if(seg.length===4){
+      const sn=SIDO_SLUG2NAME.get(ssl);
+      const fwd=sn&&GUGUN_SLUG[sn]&&GUGUN_SLUG[sn].fwd;
+      const gsl=hasKo(seg[3])?(fwd?fwd.get(seg[3]):null):seg[3];
+      return gsl?`/${base}/sido/${ssl}/${gsl}`:null;
+    }
+  }
+  return null;
+}
+
 /* ===== 썸네일 SVG ===== */
 function thumbSvg(type,slug){
   const rec=bySlug.get(slug)||PLACE_THUMB.get(slug); const P=PROD[type]||PROD.card;
@@ -2703,6 +2735,9 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
       const html=productPage(PATH2TYPE.get(seg[0]),seg[1]);
       if(html) return new Response(html,{headers:H_HTML});
     }
+    /* 한글 주소로 들어오면 같은 페이지의 영문 주소로 영구 이동시킨다 */
+    const ko=koPath(seg);
+    if(ko) return Response.redirect(SITE+ko+url.search,301);
     return new Response(notFound(),{status:404,headers:H_HTML});
   }
 };

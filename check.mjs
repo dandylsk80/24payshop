@@ -447,6 +447,75 @@ if (wanted("전환추적") && worker) {
   check((pre.headers.get("access-control-allow-methods") || "").includes("POST"), "CORS POST 허용");
 }
 
+/* ══ 9. 슬러그 ═════════════════════════════════════════════════ */
+if (wanted("슬러그") && worker) {
+  group("슬러그", "9. 슬러그·URL");
+  const src = fs.readFileSync(WORKER, "utf8");
+
+  /* 사이트맵과 내부 링크에 한글이 남아 있으면 색인이 갈린다 */
+  const nonAscii = urls.filter(u => /[^\x00-\x7F]/.test(u));
+  check(!nonAscii.length, "사이트맵 URL 전부 ASCII", nonAscii.slice(0, 2).join(", "));
+  let koLink = [];
+  for (const { p, html } of pages) {
+    const hrefs = [...html.matchAll(/href="(\/[^"#]*)"/g)].map(m => m[1]);
+    const ko = hrefs.filter(h => /[\uac00-\ud7a3]/.test(h));
+    if (ko.length) koLink.push(`${p} → ${ko[0]}`);
+  }
+  check(!koLink.length, `내부 링크에 한글 경로 없음 (${pages.length}p)`, koLink.slice(0, 2).join(", "));
+  const koCanon = pages.filter(x => /[\uac00-\ud7a3]/.test(attr(x.html, /<link rel="canonical" href="([^"]*)"/) || ""));
+  check(!koCanon.length, "canonical 전부 ASCII", koCanon[0]?.p);
+
+  /* 슬러그 중복 0건. 지역 하나가 다른 지역 슬러그에 먹히면 그 페이지가 통째로 사라진다.
+     제품마다 같은 슬러그 집합이 나와야 하고, 그 안에 중복이 없어야 한다. */
+  const sets = {};
+  for (const pth of PATHS) {
+    sets[pth] = urls.map(u => new URL(u).pathname)
+      .filter(p => new RegExp(`^/${pth}/[^/]+$`).test(p) && !p.endsWith("/sido"))
+      .map(p => p.split("/").pop());
+  }
+  let dupTotal = 0;
+  for (const pth of PATHS) {
+    const a = sets[pth], uniq = new Set(a);
+    const dups = a.filter((x, i) => a.indexOf(x) !== i);
+    dupTotal += dups.length;
+    if (dups.length) fail("슬러그 중복", `/${pth} → ${[...new Set(dups)].slice(0, 3).join(", ")}`);
+    else ok(`/${pth} 슬러그 ${uniq.size.toLocaleString()}개 중복 0건`);
+  }
+  const base = new Set(sets[PATHS[0]]);
+  for (const pth of PATHS.slice(1))
+    check(sets[pth].length === base.size && sets[pth].every(s => base.has(s)),
+      `/${pth} 슬러그 집합이 /${PATHS[0]} 과 동일`, `${sets[pth].length} vs ${base.size}`);
+
+  /* 슬러그 충돌로 사라진 지역이 없는지: REGIONS 개수와 맞춘다 */
+  const rd = src.match(/const REGIONS = \[([\s\S]*?)\];/);
+  const regionN = rd ? (rd[1].match(/\["[^"]+",/g) || []).length : 0;
+  check(regionN > 0 && regionN === base.size,
+    `REGIONS ${regionN.toLocaleString()}개 = 슬러그 ${base.size.toLocaleString()}개 (유실 없음)`,
+    regionN === base.size ? "" : `${regionN} vs ${base.size}`);
+
+  /* 한글 주소는 404 가 아니라 301 로 같은 페이지의 영문 주소를 가리켜야 한다 */
+  const sampleKo = [...(src.match(/const REGIONS = \[\["([^"]+)"/) || [])][1];
+  const koCases = [];
+  for (const pth of PATHS) koCases.push([`/${pth}/${sampleKo}`, `/${pth}/`]);
+  koCases.push(["/card-terminal/sido/서울", "/card-terminal/sido/seoul"]);
+  koCases.push(["/kiosk/sido/서울/강남구", "/kiosk/sido/seoul/gangnamgu"]);
+  koCases.push(["/regions/sido/서울", "/regions/sido/seoul"]);
+  for (const [from, wantPrefix] of koCases) {
+    const r = await GET(from);
+    const loc = r.headers.get("location") || "";
+    const okStatus = r.status === 301;
+    const okLoc = loc.startsWith("https://24payshop.com" + wantPrefix) && !/[^\x00-\x7F]/.test(loc);
+    check(okStatus && okLoc, `한글 주소 301 → 영문`, okStatus && okLoc ? "" : `${from} → ${r.status} ${loc}`);
+    if (okStatus && okLoc) {
+      const t = await GET(new URL(loc).pathname);
+      check(t.status === 200, "리다이렉트 도착지 200", t.status === 200 ? "" : `${loc} → ${t.status}`);
+    }
+  }
+  /* 없는 한글 이름까지 넘겨주면 안 된다 */
+  const nf = await GET("/kiosk/없는동네이름");
+  check(nf.status === 404, "존재하지 않는 한글 이름은 404", `→ ${nf.status}`);
+}
+
 /* ── 출력 ────────────────────────────────────────────────────── */
 console.log("");
 let failed = 0;
