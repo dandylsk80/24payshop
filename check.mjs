@@ -66,15 +66,36 @@ const ldBlocks = h => [...h.matchAll(/<script type="application\/ld\+json">([\s\
 const hasJong = w => { const c = String(w).trim().slice(-1).charCodeAt(0);
   return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 !== 0 : /[1360-8lmnr]$/i.test(String(w).trim()); };
 
+/* ── 상품별 검사 규칙 ────────────────────────────────────────
+   상품을 추가하면 여기 한 줄만 늘리면 된다. secs 는 본문 섹션 수(제목 div/h2
+   개수는 여기에 process·check·faq 3개가 더 붙는다), h2 는 그 상품의 시그니처
+   h2 섹션 제목에 반드시 들어가야 하는 낱말이다. */
+const PRODS = {
+  "card-terminal": { name: "카드단말기", secs: 10, h2: "토스단말기", h2len: [400, 600],
+                     faqMin: 8, extraFaq: { word: "토스", min: 2, max: 3 }, lead: "토스단말기" },
+  "pos":           { name: "포스기",     secs: 10, h2: "토스단말기", h2len: [400, 600],
+                     faqMin: 8, extraFaq: { word: "토스", min: 2, max: 3 }, lead: "토스단말기" },
+  "kiosk":         { name: "키오스크",   secs:  9, h2: "메뉴",       h2len: [400, 800],
+                     faqMin: 8, extraFaq: null,                              lead: "키오스크" },
+};
+const PATHS = Object.keys(PRODS);
+const PROD_RE = new RegExp(`^/(${PATHS.join("|")})/[^/]+$`);
+const prodOf = p => PRODS[p.split("/")[1]];
+
 /* ── 표본 수집: 사이트맵에서 실제 URL 을 가져온다 ───────────── */
 let SM = "", urls = [], regionPaths = [];
 if (worker) {
   SM = (await body("/sitemap.xml")).t;
   urls = [...SM.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
-  const all = urls.map(u => new URL(u).pathname)
-    .filter(p => /^\/(card-terminal|pos)\/[^/]+$/.test(p) && !p.endsWith("/sido"));
-  const step = Math.max(1, Math.floor(all.length / SAMPLE));
-  for (let i = 0; i < all.length && regionPaths.length < SAMPLE; i += step) regionPaths.push(all[i]);
+  /* 상품마다 같은 수씩 뽑는다. 한 상품이 표본을 독차지하면 나머지가 안 걸린다. */
+  const per = Math.max(1, Math.floor(SAMPLE / PATHS.length));
+  for (const pth of PATHS) {
+    const all = urls.map(u => new URL(u).pathname)
+      .filter(p => p.startsWith(`/${pth}/`) && PROD_RE.test(p) && !p.endsWith("/sido"));
+    const step = Math.max(1, Math.floor(all.length / per));
+    let n = 0;
+    for (let i = 0; i < all.length && n < per; i += step) { regionPaths.push(all[i]); n++; }
+  }
 }
 /* 사이트맵이 죽으면 이후 검사가 전부 무의미해진다. 조용히 0건 통과로
    지나가지 않도록 여기서 끊는다. */
@@ -111,13 +132,13 @@ if (wanted("라우트") && worker) {
   group("라우트", "2. 라우트");
   const must = [
     ["/", "text/html"], ["/list", "text/html"], ["/regions", "text/html"],
-    ["/card-terminal", "text/html"], ["/pos", "text/html"],
+    ...PATHS.map(p => [`/${p}`, "text/html"]),
     ["/robots.txt", "text/plain"], ["/llms.txt", "text/plain"],
     ["/sitemap.xml", "xml"], ["/rss.xml", "xml"], ["/rss", "xml"], ["/feed", "xml"],
     ["/atom.xml", "xml"], ["/atom", "xml"],
     ["/favicon.ico", "image/x-icon"], ["/favicon.svg", "image/svg"],
     ["/apple-touch-icon.png", "image/png"], ["/og.svg", "image/svg"],
-    ["/card-terminal/sido/seoul", "text/html"],
+    ...PATHS.map(p => [`/${p}/sido/seoul`, "text/html"]),
   ];
   for (const [p, ct] of must) {
     const r = await GET(p);
@@ -128,7 +149,7 @@ if (wanted("라우트") && worker) {
   for (const { p, status } of pages) if (status !== 200) fail("지역 페이지 200", `${p} → ${status}`);
   if (pages.every(x => x.status === 200)) ok(`지역 페이지 ${pages.length}개 전부 200`);
 
-  const thumb = await GET("/thumb/card/" + (regionPaths[0] || "/x/seoul").split("/").pop() + ".svg");
+  const thumb = await GET("/thumb/kiosk/" + (regionPaths[0] || "/x/seoul").split("/").pop() + ".svg");
   check(thumb.status === 200, "/thumb/:type/:slug.svg 200", `→ ${thumb.status}`);
 
   const nf = await GET("/이런건-없다");
@@ -138,11 +159,13 @@ if (wanted("라우트") && worker) {
   const ins = await GET("/indexnow-submit");
   check(ins.status === 403, "/indexnow-submit 키 없이 403", `→ ${ins.status}`);
   /* 목록 → 상세 링크가 죽어 있지 않은지 (시·도 색인에서 뽑아 확인) */
-  const sido = (await body("/card-terminal/sido/seoul")).t;
-  const links = [...sido.matchAll(/href="(\/card-terminal\/[^"#]+)"/g)].map(m => m[1]).slice(0, 8);
-  let dead = 0;
-  for (const l of links) if ((await GET(l)).status !== 200) { dead++; fail("색인 링크가 404", l); }
-  if (!dead && links.length) ok(`시·도 색인 내부 링크 ${links.length}개 정상`);
+  for (const pth of PATHS) {
+    const sido = (await body(`/${pth}/sido/seoul`)).t;
+    const links = [...sido.matchAll(new RegExp(`href="(/${pth}/[^"#]+)"`, "g"))].map(m => m[1]).slice(0, 6);
+    let dead = 0;
+    for (const l of links) if ((await GET(l)).status !== 200) { dead++; fail("색인 링크가 404", l); }
+    if (!dead && links.length) ok(`/${pth} 시·도 색인 내부 링크 ${links.length}개 정상`);
+  }
 }
 
 /* ══ 3. 한국어 ═════════════════════════════════════════════════ */
@@ -186,38 +209,41 @@ if (wanted("한국어") && pages.length) {
 /* ══ 4. 콘텐츠 ═════════════════════════════════════════════════ */
 if (wanted("콘텐츠") && pages.length) {
   group("콘텐츠", "4. 콘텐츠");
-  const SECTIONS = 10;               /* why·area·benefit·device·pay·industry·fee·effect·trust·toss */
   let thin = [], secBad = [], tossBad = [], faqBad = [], dupBad = [], linkBad = [];
   for (const { p, html } of pages) {
+    const D = prodOf(p);
     const len = text(html).length;
     if (len < 2500) thin.push(`${p} ${len}자`);
 
     const heads = (html.match(/class="sh (?:green|blue|amber|purple|red)"/g) || []).length;
-    if (heads < SECTIONS + 2) secBad.push(`${p} 섹션 ${heads}개`);   /* +process +check +faq */
+    if (heads < D.secs + 3) secBad.push(`${p} 섹션 ${heads}개 (${D.secs + 3}개 필요)`);   /* +process +check +faq */
 
-    /* 토스단말기 섹션: h2 하나 + 본문 400~600자 */
+    /* 시그니처 h2 섹션: h2 하나 + 본문 길이 */
     const h2 = [...html.matchAll(/<h2 class="sh[^"]*"><span>([\s\S]*?)<\/span><\/h2>/g)].map(m => text(m[1]));
     const tb = html.match(/<h2 class="sh[^"]*">[\s\S]*?<\/h2>((?:<p>[\s\S]*?<\/p>)+)/);
     const tlen = tb ? text(tb[1]).length : 0;
-    if (h2.length !== 1 || !h2[0].includes("토스단말기") || tlen < 400 || tlen > 600)
-      tossBad.push(`${p} h2 ${h2.length}개 · 본문 ${tlen}자`);
+    if (h2.length !== 1 || !h2[0].includes(D.h2) || tlen < D.h2len[0] || tlen > D.h2len[1])
+      tossBad.push(`${p} h2 ${h2.length}개 "${h2[0] || ""}" · 본문 ${tlen}자`);
 
     const qs = [...html.matchAll(/<div class="q">[\s\S]*?<\/div>/g)].map(m => text(m[0]));
-    const tq = qs.filter(q => q.includes("토스")).length;
-    if (qs.length < 8 || tq < 2 || tq > 3) faqBad.push(`${p} FAQ ${qs.length}개 · 토스 ${tq}개`);
+    if (qs.length < D.faqMin) faqBad.push(`${p} FAQ ${qs.length}개 (${D.faqMin}개 필요)`);
+    if (D.extraFaq) {
+      const tq = qs.filter(q => q.includes(D.extraFaq.word)).length;
+      if (tq < D.extraFaq.min || tq > D.extraFaq.max) faqBad.push(`${p} ${D.extraFaq.word} 문답 ${tq}개`);
+    }
 
     /* 같은 페이지에서 문단이 그대로 반복되면 풀 추출이 깨진 것이다 */
     const ps = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map(m => text(m[1])).filter(x => x.length > 40);
     if (new Set(ps).size !== ps.length) dupBad.push(p);
 
-    const rl = (html.match(/<a href="\/(?:card-terminal|pos)\/[^"]+"/g) || []).length;
+    const rl = (html.match(new RegExp(`<a href="/(?:${PATHS.join("|")})/[^"]+"`, "g")) || []).length;
     if (rl < 12) linkBad.push(`${p} 내부링크 ${rl}개`);
   }
   const rep = (arr, msg) => arr.length ? arr.slice(0, 3).forEach(w => fail(msg, w)) : ok(`${msg} (${pages.length}p)`);
   rep(thin, "본문 2,500자 이상");
-  rep(secBad, `섹션 ${SECTIONS + 2}개 이상`);
-  rep(tossBad, "토스단말기 h2 1개 + 본문 400~600자");
-  rep(faqBad, "FAQ 8개 이상 · 토스 문답 2~3개");
+  rep(secBad, "상품별 섹션 수 충족");
+  rep(tossBad, "시그니처 h2 1개 + 본문 길이");
+  rep(faqBad, "상품별 FAQ 개수 충족");
   rep(dupBad, "페이지 내 문단 중복 없음");
   rep(linkBad, "지역 내부링크 12개 이상");
 }
@@ -246,14 +272,15 @@ if (wanted("seo") || wanted("SEO")) {
     const LOC = g2.find(x => x["@type"] === "BreadcrumbList")?.itemListElement?.at(-1)?.name;
     if (!LOC) toss.push(`${p} 브레드크럼에서 지역명을 못 얻음`);
     else {
-      if (!t || !t.startsWith(`${LOC} 토스단말기`)) toss.push(`${p} title="${t?.slice(0, 40)}…"`);
-      if (!d || !d.startsWith(`${LOC} 토스단말기`)) tossD.push(`${p} desc="${d?.slice(0, 40)}…"`);
+      const LEAD = prodOf(p).lead;
+      if (!t || !t.startsWith(`${LOC} ${LEAD}`)) toss.push(`${p} title="${t?.slice(0, 40)}…"`);
+      if (!d || !d.startsWith(`${LOC} ${LEAD}`)) tossD.push(`${p} desc="${d?.slice(0, 40)}…"`);
       /* 화면 큰 제목과 히어로 배지. title 만 고치고 화면을 안 고치는 실수가
          쉬워서 따로 본다. h1 안엔 <br> 이 있으니 태그를 벗겨 비교한다. */
       const h1t = text(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] || "");
-      if (!h1t.startsWith(`${LOC} 토스단말기`)) tossH.push(`${p} h1="${h1t.slice(0, 40)}…"`);
+      if (!h1t.startsWith(`${LOC} ${LEAD}`)) tossH.push(`${p} h1="${h1t.slice(0, 40)}…"`);
       const badge = text(html.match(/<span class="tag">([\s\S]*?)<\/span>/)?.[1] || "");
-      if (!badge.includes("토스단말기")) tossB.push(`${p} badge="${badge.slice(0, 40)}…"`);
+      if (!badge.includes(LEAD)) tossB.push(`${p} badge="${badge.slice(0, 40)}…"`);
     }
     if (t) titles.set(t, (titles.get(t) || 0) + 1);
   }
@@ -265,10 +292,10 @@ if (wanted("seo") || wanted("SEO")) {
   rep(og, "og:* + twitter:card 완비");
   rep(lang, 'html lang="ko"');
   rep(vp, "viewport 메타");
-  rep(toss, "title 이 '지역명 토스단말기' 로 시작");
-  rep(tossD, "meta description 이 '지역명 토스단말기' 로 시작");
-  rep(tossH, "h1 이 '지역명 토스단말기' 로 시작");
-  rep(tossB, "히어로 배지에 토스단말기 포함");
+  rep(toss, "title 이 '지역명 + 상품 대표어' 로 시작");
+  rep(tossD, "meta description 이 '지역명 + 상품 대표어' 로 시작");
+  rep(tossH, "h1 이 '지역명 + 상품 대표어' 로 시작");
+  rep(tossB, "히어로 배지에 상품 대표어 포함");
   const dup = [...titles].filter(([, n]) => n > 1);
   dup.length ? dup.slice(0, 3).forEach(([t, n]) => fail("title 중복", `${n}회 "${t}"`)) : ok("title 표본 내 중복 없음");
 }
@@ -293,7 +320,9 @@ if (wanted("구조화데이터") && pages.length) {
       const shown = [...html.matchAll(/<div class="q">/g)].length;
       if (n !== shown) faqMis.push(`${p} JSON-LD ${n}개 vs 화면 ${shown}개`);
       if ((f.mainEntity || []).some(q => !q.name?.trim() || !q.acceptedAnswer?.text?.trim())) empty.push(p);
-      if (!(f.mainEntity || []).some(q => q.name?.includes("토스"))) miss.push(`${p} FAQPage 에 토스 문답 없음`);
+      const X = prodOf(p).extraFaq;
+      if (X && !(f.mainEntity || []).some(q => q.name?.includes(X.word)))
+        miss.push(`${p} FAQPage 에 ${X.word} 문답 없음`);
     }
     const bcl = g.find(x => x["@type"] === "BreadcrumbList");
     if (bcl && (bcl.itemListElement || []).some((it, i) => it.position !== i + 1))
