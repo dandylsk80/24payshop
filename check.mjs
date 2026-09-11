@@ -47,13 +47,34 @@ try {
 } catch (e) { loadErr = e; }
 finally { try { fs.unlinkSync(tmp); } catch {} }
 
-/* env 스텁. DB·텔레그램 토큰을 비워두면 워커가 스스로 빠져나가므로
-   검사가 D1 을 건드리거나 알림을 쏘는 일은 없다. */
-const ENV = {};
-const CTX = { waitUntil() {} };
-const GET = async (p, init) => {
-  const r = new Request("https://24payshop.com" + p, init);
-  return worker.fetch(r, ENV, CTX);
+/* env 스텁. 텔레그램 토큰을 비워두면 워커가 스스로 빠져나가므로 알림은 나가지 않는다.
+   DB 는 prepare().bind().run() 만 흉내 내서, 워커가 무엇을 적으려 했는지만 모아둔다.
+   실제 D1 에는 한 줄도 쓰지 않는다. */
+let writes = [];
+const DB = {
+  prepare(sql) {
+    const row = { sql, args: [] };
+    return {
+      bind(...args) { row.args = args; return this; },
+      run() { writes.push(row); return Promise.resolve({ success: true, meta: {} }); },
+      first() { writes.push(row); return Promise.resolve(null); },
+      all() { writes.push(row); return Promise.resolve({ results: [] }); },
+    };
+  },
+};
+const insertsTo = t => writes.filter(w => new RegExp(`INSERT INTO ${t}\\b`, "i").test(w.sql));
+const fresh = () => { writes = []; };
+
+let waits = [];
+const ENV = { DB };
+const CTX = { waitUntil(p) { waits.push(Promise.resolve(p).catch(() => {})); } };
+const GET = async (p, init = {}) => {
+  const { ua, ...rest } = init;
+  const headers = Object.assign({}, rest.headers, ua ? { "user-agent": ua } : {});
+  const r = new Request(p.startsWith("http") ? p : "https://24payshop.com" + p, { ...rest, headers, redirect: "manual" });
+  const res = await worker.fetch(r, ENV, CTX);
+  await Promise.all(waits); waits = [];
+  return res;
 };
 const body = async (p, init) => { const r = await GET(p, init); return { r, t: await r.text() }; };
 
@@ -514,6 +535,117 @@ if (wanted("슬러그") && worker) {
   /* 없는 한글 이름까지 넘겨주면 안 된다 */
   const nf = await GET("/kiosk/없는동네이름");
   check(nf.status === 404, "존재하지 않는 한글 이름은 404", `→ ${nf.status}`);
+}
+
+/* ══ 10. 홈·색인 ═══════════════════════════════════════════════
+   홈은 shell() 이 아니라 HOME_HTML 이고, 목록·시도 페이지는 listShell 이라
+   지역 페이지용 검사(5번)가 한 번도 닿지 않던 구간이다. h1·canonical·og 가
+   통째로 빠져 있어도 아무도 못 잡았다. */
+if (wanted("홈") && worker) {
+  group("홈·색인", "10. 홈·색인 페이지");
+  const OG = ["og:type", "og:title", "og:description", "og:url", "og:image", "og:site_name"];
+
+  /* 홈 */
+  const { r: hr, t: home } = await body("/");
+  check(hr.status === 200, "홈 200", `→ ${hr.status}`);
+  const hh1 = [...home.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/g)];
+  check(hh1.length === 1, "홈 h1 정확히 1개", `→ ${hh1.length}개`);
+  check(hh1.length === 1 && text(hh1[0][1]).length >= 4, "홈 h1 내용 존재", hh1[0] && text(hh1[0][1]));
+  check(attr(home, /<link rel="canonical" href="([^"]*)"/) === "https://24payshop.com/",
+    "홈 canonical", attr(home, /<link rel="canonical" href="([^"]*)"/));
+  for (const k of OG) check(home.includes(`property="${k}"`), `홈 ${k}`);
+  check(home.includes('name="twitter:card"'), "홈 twitter:card");
+  check(/<html lang="ko">/.test(home), '홈 html lang="ko"');
+  check(/name="viewport"/.test(home), "홈 viewport");
+  check(home.includes("naver-site-verification"), "홈 네이버 소유확인 메타");
+  check(!/noindex/i.test(home), "홈 noindex 없음");
+  check(!!attr(home, /<title>([\s\S]*?)<\/title>/), "홈 title");
+  check(!!attr(home, /<meta name="description" content="([^"]*)"/), "홈 meta description");
+
+  /* 사이트맵의 색인성 페이지 전부 (동네 상세 제외). 일부만 고치고 지나가는 걸 막는다. */
+  const idxPaths = urls.map(u => new URL(u).pathname).filter(p => p !== "/" && !PROD_RE.test(p));
+  const noH1 = [], multiH1 = [], badCan = [], noOg = [], noIdx = [], emptyH1 = [], badStatus = [];
+  for (const p of idxPaths) {
+    const { r, t } = await body(p);
+    if (r.status !== 200) { badStatus.push(`${p} → ${r.status}`); continue; }
+    const hs = [...t.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/g)];
+    if (!hs.length) noH1.push(p);
+    else if (hs.length > 1) multiH1.push(`${p} ${hs.length}개`);
+    else if (text(hs[0][1]).length < 2) emptyH1.push(p);
+    const c = attr(t, /<link rel="canonical" href="([^"]*)"/);
+    if (c !== "https://24payshop.com" + p) badCan.push(`${p} → ${c}`);
+    for (const k of OG) if (!t.includes(`property="${k}"`)) { noOg.push(`${p} ${k}`); break; }
+    if (/noindex/i.test(t)) noIdx.push(p);
+  }
+  const rep = (arr, msg) => arr.length ? arr.slice(0, 3).forEach(w => fail(msg, w)) : ok(`${msg} (${idxPaths.length}p)`);
+  rep(badStatus, "색인 페이지 200");
+  rep(noH1, "색인 페이지 h1 존재");
+  rep(multiH1, "색인 페이지 h1 1개");
+  rep(emptyH1, "색인 페이지 h1 내용 존재");
+  rep(badCan, "색인 페이지 canonical 이 자기 경로와 일치");
+  rep(noOg, "색인 페이지 og:* 완비");
+  rep(noIdx, "색인 페이지 noindex 없음");
+  fresh();
+}
+
+/* ══ 11. 크롤러기록 ════════════════════════════════════════════ */
+if (wanted("크롤러기록") && worker) {
+  group("크롤러기록", "11. 크롤러 기록");
+  const target = regionPaths[0] || "/list";
+  const CASES = [
+    ["Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)", "Yeti"],
+    ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "Googlebot"],
+    ["Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)", "bingbot"],
+    ["Mozilla/5.0 (compatible; Daum/4.1; +http://cs.daum.net/faq/15/4118.html)", "Daum"],
+    ["Mozilla/5.0 (compatible; Daumoa/4.1)", "Daum"],
+    ["Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)", "YandexBot"],
+    ["Scrapy/2.11 (+https://scrapy.org)", "기타봇"],
+  ];
+  for (const [ua, wantBot] of CASES) {
+    fresh();
+    await GET(target, { ua });
+    const ins = insertsTo("crawl_hits");
+    if (ins.length !== 1) { fail("봇 요청 1건 기록", `${wantBot} → ${ins.length}건`); continue; }
+    const [site, bot, gotUa, host, pth, status] = ins[0].args;
+    check(site === "24payshop" && bot === wantBot && pth === target && status === 200 && host === "24payshop.com",
+      `${wantBot} 분류·경로·상태 기록`, `→ site=${site} bot=${bot} path=${pth} status=${status}`);
+    check(gotUa === ua.slice(0, 250), `${wantBot} UA 원문 보존`);
+  }
+  /* 사람은 기록하지 않는다. events 와 역할이 겹치고 양만 수백 배가 된다. */
+  for (const ua of [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile Safari/604.1",
+  ]) {
+    fresh();
+    await GET(target, { ua });
+    check(insertsTo("crawl_hits").length === 0, "사람 트래픽은 기록하지 않음", ua.slice(0, 40));
+  }
+  const YETI = "Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)";
+  /* 404·301 도 남아야 "크롤러가 헛도는지"를 볼 수 있다 */
+  fresh();
+  await GET("/이런건-없다", { ua: YETI });
+  const nf = insertsTo("crawl_hits")[0];
+  check(nf && nf.args[5] === 404, "404 응답도 기록", nf ? `→ ${nf.args[5]}` : "기록 없음");
+  fresh();
+  await GET("/card-terminal/강남동", { ua: YETI });
+  const rd = insertsTo("crawl_hits")[0];
+  check(rd && rd.args[5] === 301, "한글 주소 301 도 기록", rd ? `→ ${rd.args[5]}` : "기록 없음");
+  /* sitemap.xml 요청이 잡혀야 "네이버가 사이트맵을 읽는지"를 답할 수 있다 */
+  fresh();
+  await GET("/sitemap.xml", { ua: YETI });
+  const sm2 = insertsTo("crawl_hits")[0];
+  check(sm2 && sm2.args[4] === "/sitemap.xml", "sitemap.xml 요청 기록", sm2 ? `→ ${sm2.args[4]}` : "기록 없음");
+  /* 키가 로그 테이블에 평문으로 박히면 안 된다 */
+  fresh();
+  await GET("/indexnow-submit?key=secret123", { ua: YETI });
+  const kr = insertsTo("crawl_hits")[0];
+  check(kr && !kr.args[4].includes("secret123") && kr.args[4].includes("key=***"),
+    "기록된 경로에서 key 마스킹", kr && kr.args[4]);
+  /* D1 바인딩이 없는 환경(로컬 dev)에서도 죽지 않아야 한다 */
+  const noDb = await worker.fetch(new Request("https://24payshop.com" + target,
+    { headers: { "user-agent": YETI } }), {}, CTX);
+  check(noDb.status === 200, "DB 바인딩 없어도 응답 정상", `→ ${noDb.status}`);
+  fresh();
 }
 
 /* ── 출력 ────────────────────────────────────────────────────── */

@@ -160,6 +160,60 @@ async function indexnowFetch(opt){
   return last||{status:0};
 }
 
+/* ═══════════════ 크롤러 방문 기록 ═══════════════
+   기존 집계(events)는 브라우저가 실행하는 /api/track 비컨으로만 채워진다.
+   크롤러는 JS 를 돌리지 않으므로 events 에는 영원히 한 줄도 안 남는다.
+   "네이버 Yeti 가 실제로 오긴 하는가"를 보려면 서버가 직접 적어야 한다.
+   semogwa 와 같은 방식·같은 테이블(crawl_hits)을 site 컬럼으로 나눠 쓴다. */
+
+/* 분류하고 싶은 봇만 이름을 붙인다. 위에서부터 먼저 맞는 것을 쓰므로
+   Googlebot 계열처럼 겹치는 패턴은 순서가 곧 우선순위다. */
+const CRAWLER_BOTS = [
+  [/yeti/i,                                  "Yeti"],        /* 네이버 */
+  [/daumoa|cs\.daum\.net|compatible;\s*daum\//i, "Daum"],
+  [/google-inspectiontool/i,                 "GoogleInspect"],
+  [/googleother/i,                           "GoogleOther"],
+  [/googlebot|mediapartners-google/i,        "Googlebot"],
+  [/bingbot|adidxbot/i,                      "bingbot"],
+  [/yandex/i,                                "YandexBot"],
+  [/petalbot/i,                              "PetalBot"],
+  [/bytespider/i,                            "Bytespider"],
+  [/applebot/i,                              "Applebot"],
+  [/gptbot|oai-searchbot|chatgpt-user/i,     "OpenAI"],
+  [/claudebot|claude-web|anthropic/i,        "ClaudeBot"],
+  [/perplexity/i,                            "PerplexityBot"],
+  [/facebookexternalhit|meta-external/i,     "Facebook"],
+];
+/* 이름 붙인 봇이 아니어도 봇이면 "기타봇" 으로 남긴다. 사람은 남기지 않는다
+   (events 와 역할이 겹치고, 양만 수백 배로 늘어난다). */
+function crawlerName(ua){
+  if(!ua) return "";
+  for(const [re,name] of CRAWLER_BOTS) if(re.test(ua)) return name;
+  return BOT_UA_RE.test(ua) ? "기타봇" : "";
+}
+
+/* 응답을 돌려준 뒤 waitUntil 로 적는다. D1 이 느리거나 실패해도
+   크롤러가 받는 응답에는 영향이 없어야 한다. */
+function logCrawl(env, ctx, request, status){
+  try{
+    if(!env||!env.DB) return;
+    const ua=request.headers.get("user-agent")||"";
+    const bot=crawlerName(ua);
+    if(!bot) return;
+    const u=new URL(request.url);
+    /* 경로를 쿼리째 남기면 /indexnow-submit?key=... 의 키가 로그 테이블에 그대로 박힌다. */
+    const q=(u.pathname+u.search).replace(/([?&]key=)[^&]*/gi,"$1***");
+    const cf=request.cf||{};
+    const pr=env.DB.prepare('INSERT INTO crawl_hits (site,bot,ua,host,path,status,ts,ip,asn,country) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .bind('24payshop', bot, ua.slice(0,250), u.host.slice(0,80), q.slice(0,300),
+            status|0, new Date().toISOString(), request.headers.get("cf-connecting-ip")||"",
+            cf.asn|0, cf.country||"")
+      .run();
+    const done=Promise.resolve(pr).catch(()=>{});
+    if(ctx&&ctx.waitUntil) ctx.waitUntil(done);
+  }catch(e){}
+}
+
 /* 대시보드 방문자 집계용 봇 UA 필터 (크롤러를 방문자로 세지 않기 위함) */
 const BOT_UA_RE = /bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|baidu|duckduckbot|facebookexternalhit|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|headlesschrome|python-requests|curl|wget|yeti|daumoa|cs\.daum\.net|compatible;\s*daum\/|lighthouse|pagespeed|inspectiontool|googleother|applebot|amazonbot|archiver|scrapy|node-fetch|okhttp|go-http|libwww|httpclient|dataforseo|serpstat|zoominfo|bubing|linkdex/i;
 // 24payshop.js — Cloudflare Worker (전체 사이트 동적 생성)
@@ -198,6 +252,14 @@ const HOME_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>24페이샵 · 카드단말기 설치</title>
 <meta name="description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
+<link rel="canonical" href="https://24payshop.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="24페이샵 · 카드단말기 설치">
+<meta property="og:description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
+<meta property="og:url" content="https://24payshop.com/">
+<meta property="og:image" content="https://24payshop.com/og.svg">
+<meta property="og:site_name" content="24페이샵">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -368,7 +430,7 @@ const HOME_HTML = `<!DOCTYPE html>
     <div class="stamp">APPROVED</div>
 
     <div class="eq">＝＝＝＝＝＝＝＝＝＝＝＝</div>
-    <div class="logo"><span class="b24">24</span><span class="pay">pay</span><span class="shop">shop</span><small>카드단말기 · 포스기 설치 전문</small></div>
+    <h1 class="logo"><span class="b24">24</span><span class="pay">pay</span><span class="shop">shop</span><small>카드단말기 · 포스기 설치 전문</small></h1>
     <div class="no">NO. 20260615 · 09–21시</div>
     <div class="eq">＝＝＝＝＝＝＝＝＝＝＝＝</div>
 
@@ -2133,6 +2195,11 @@ const PLACE_THUMB=new Map();
 for(const [n,sl] of SIDO_ORDER){if(n!=="기타"&&SIDO_GROUPS[n]&&SIDO_GROUPS[n].length)PLACE_THUMB.set("sido-"+sl,[n,""]);}
 for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl||sd==="기타")continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd)PLACE_THUMB.set("gugun-"+ssl+"-"+gsl,[gg,sd]);}
 function listShell(title,desc,canonical,bc,inner){
+  /* 목록·시도·구군 같은 색인성 페이지에는 h1 이 아예 없었다(31개). 본문 첫 섹션
+     제목을 그대로 h1 으로 올린다. .sh 가 font-size·weight 를 inherit 하고 색은
+     .sh span 이 쥐고 있어서 겉모습은 div 일 때와 같다. 첫 하나만 바꾼다. */
+  inner=String(inner).replace(/<div class="sh ([a-z]+)"><span>([\s\S]*?)<\/span><\/div>/,
+    (m,cls,txt)=>`<h1 class="sh ${cls}"><span>${txt}</span></h1>`);
   const bcHtml=`<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
   const jsonld=JSON.stringify({"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))});
   return shell({title,desc,canonical,ogimg:`${SITE}/thumb/card/seoul.svg`,jsonld,body:`${bcHtml}${inner}${footer("","")}`});
@@ -2688,10 +2755,9 @@ function blockScraper(request){
   return null;
 }
 
-export default {
-  /* 매일 1회 IndexNow 자동 제출 (cron 은 wrangler.toml [triggers]) */
-  async scheduled(event, env, ctx){ ctx.waitUntil(indexnowSubmit(false)); },
-  async fetch(request, env, ctx){
+/* 라우팅 본체. export default.fetch 는 이 결과에 크롤러 기록만 덧붙인다.
+   경로마다 흩어진 return 을 전부 고치지 않고 한 곳에서 감싸기 위해 분리했다. */
+async function handleFetch(request, env, ctx){
     const __blk = blockScraper(request); if(__blk) return __blk;
     const url=new URL(request.url);
     let path=decodeURIComponent(url.pathname).replace(/\/+$/,"")||"/";
@@ -2739,6 +2805,15 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
     const ko=koPath(seg);
     if(ko) return Response.redirect(SITE+ko+url.search,301);
     return new Response(notFound(),{status:404,headers:H_HTML});
+}
+
+export default {
+  /* 매일 1회 IndexNow 자동 제출 (cron 은 wrangler.toml [triggers]) */
+  async scheduled(event, env, ctx){ ctx.waitUntil(indexnowSubmit(false)); },
+  async fetch(request, env, ctx){
+    const res = await handleFetch(request, env, ctx);
+    logCrawl(env, ctx, request, res.status);      /* 실패해도 응답에는 영향 없음 */
+    return res;
   }
 };
 function notFound(){
