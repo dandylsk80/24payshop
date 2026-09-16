@@ -43,7 +43,37 @@ function tkDevice(ua){
   if(/mobile|iphone|ipod|android|blackberry|iemobile|opera mini|webos/i.test(ua)) return "mobile";
   return "pc";
 }
-function tkSource(ref, selfHost){
+/* ===== 생성형 AI 유입 판별 =====
+   ref(리퍼러 호스트) 또는 utm_source/ref 쿼리값에 AI 서비스가 있으면
+   source 를 'ai' 로, 세부 서비스명은 keyword 자리에 넣는다. */
+const AI_SRC = [
+  ["chatgpt", "ChatGPT"], ["openai", "ChatGPT"],
+  ["perplexity", "Perplexity"], ["gemini", "Gemini"],
+  ["claude.ai", "Claude"], ["claude", "Claude"],
+  ["copilot", "Copilot"]
+];
+function aiName(v){
+  if(!v) return "";
+  v = String(v).toLowerCase();
+  for(var i=0;i<AI_SRC.length;i++){ if(v.indexOf(AI_SRC[i][0]) >= 0) return AI_SRC[i][1]; }
+  return "";
+}
+/* qs 는 랜딩 URL 의 쿼리스트링(location.search). 비콘이 함께 보낸다. */
+function tkAi(ref, qs){
+  if(qs){
+    try{
+      var p = new URLSearchParams(String(qs));
+      var n = aiName(p.get("utm_source") || "") || aiName(p.get("ref") || "");
+      if(n) return n;
+    }catch(e){}
+  }
+  if(ref){
+    try{ return aiName(new URL(ref).hostname); }catch(e){}
+  }
+  return "";
+}
+function tkSource(ref, selfHost, qs){
+  if(tkAi(ref, qs)) return "ai";
   if(!ref) return "direct";
   var h = "";
   try{ h = new URL(ref).hostname.toLowerCase(); }catch(e){ return "etc"; }
@@ -54,7 +84,9 @@ function tkSource(ref, selfHost){
   if(h.indexOf("daum") >= 0 || h.indexOf("kakao") >= 0) return "daum";
   return "etc";
 }
-function tkKeyword(ref){
+function tkKeyword(ref, qs){
+  var __ai = tkAi(ref, qs);
+  if(__ai) return __ai;
   if(!ref) return "";
   try{
     var p = new URL(ref).searchParams;
@@ -140,8 +172,8 @@ function skipViewCf(request, ip){
   if (cc && cc !== "KR") return true;             /* 국내가 아니면 방문 집계 제외 */
   return false;
 }
-function tkMeta(ua, ref, selfHost){
-  return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost), tkKeyword(ref) ];
+function tkMeta(ua, ref, selfHost, qs){
+  return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost, qs), tkKeyword(ref, qs) ];
 }
 
 /* IndexNow 폴백: api.indexnow.org / www.bing.com 은 Cloudflare Workers 의 공용
@@ -557,7 +589,7 @@ const HOME_HTML = `<!DOCTYPE html>
 
 <div class="callbar" style="display:flex;gap:8px;padding-left:14px;padding-right:14px"><a href="tel:01098768282" style="flex:1">📞 전화 상담</a><a href="sms:01098768282" style="flex:1;background:#3b7df6">💬 문자 상담</a></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script>
-<script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script>
+<script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script>
 </body>
 </html>
 `;
@@ -2035,7 +2067,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
 <div class="callbar"><div class="in" style="display:flex;gap:8px"><a href="tel:${TELRAW}" style="flex:1">📞 전화 상담</a><a href="sms:${TELRAW}" style="flex:1;background:var(--blue)">💬 문자 상담</a></div></div>
-<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
+<!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
 }
 
 /* ===== 푸터 ===== */
@@ -2696,7 +2728,7 @@ async function tkDup(env, site, type, page, ip) {
   } catch (e) { return false; }
 }
 
-async function tgNotify(env, type, page, ref, ua, btn) {
+async function tgNotify(env, type, page, ref, ua, btn,qs) {
   const TG_TOKEN = env && env.TG_TOKEN;
   const TG_CHAT = env && env.TG_CHAT;
   if (!TG_TOKEN || !TG_CHAT) return;
@@ -2711,9 +2743,10 @@ async function tgNotify(env, type, page, ref, ua, btn) {
   /* 라벨이 '상담' 인데 실제로는 sms:/tel: 링크인 버튼이 있어 눌린 버튼 이름을 그대로 싣는다 */
   if (btn) L.push('버튼: ' + btn);
   /* ref 에서 뽑은 진짜 검색어 — 없으면 줄 자체를 넣지 않는다 */
-  const __kw = tkKeyword(ref);
+  const __ai = tkAi(ref, qs);
+  const __kw = __ai ? '' : tkKeyword(ref);
   if (__kw) L.push('검색어: ' + __kw);
-  L.push('유입: ' + tgRef(ref));
+  L.push('유입: ' + (__ai ? 'AI · ' + __ai : tgRef(ref)));
   L.push('기기: ' + (/Mobile|Android|iPhone|iPad/i.test(ua || '') ? '모바일' : 'PC'));
   L.push('시각: ' + tgTime() + ' (KST)');
   {
@@ -2767,8 +2800,8 @@ async function handleFetch(request, env, ctx){
     if (await tkDup(env, '24payshop', b.type, (b.page || '').slice(0, 300), request.headers.get('CF-Connecting-IP') || '')) {
       return new Response(JSON.stringify({ ok: true, dup: 1 }), { headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } });
     }
-const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();const ua=request.headers.get("User-Agent")||"";if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua, String(b.b || "").slice(0, 40));if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&skipViewCf(request, request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
-            .bind('24payshop', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', '24payshop.com')).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();const ua=request.headers.get("User-Agent")||"";if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua, String(b.b || "").slice(0, 40), b.q||"");if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&skipViewCf(request, request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
+            .bind('24payshop', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', '24payshop.com', b.q||"")).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(path==="/") return new Response(HOME_HTML.replace("</head>",homeSchema()+"</head>"),{headers:H_HTML});
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
