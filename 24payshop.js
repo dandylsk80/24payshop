@@ -582,7 +582,7 @@ const HOME_HTML = `<!DOCTYPE html>
     <div class="fbrand">24<span class="pay">pay</span>shop</div>
     <div>카드단말기 · 포스기 설치 전문</div>
     <div>대표전화 <a href="tel:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 문자 <a href="sms:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
-    <div><a href="/regions">전체 지역</a> &nbsp;|&nbsp; <a href="/list">전체 목록</a></div>
+    <div><a href="/post/">단말기 정보</a> &nbsp;|&nbsp; <a href="/regions">전체 지역</a> &nbsp;|&nbsp; <a href="/list">전체 목록</a></div>
     <div class="fcopy">© 2026 24PAYSHOP</div>
   </footer>
 </div>
@@ -2077,6 +2077,7 @@ function footer(otherLink,regionLinks){
   <div>카드단말기·포스기·키오스크·테이블오더·자동판매기 설치 전문</div>
   <div>대표전화 <a href="tel:${TELRAW}">${TEL}</a> &nbsp;|&nbsp; 문자 <a href="sms:${TELRAW}">${TEL}</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
   ${otherLink||""}
+  <div style="margin-top:8px"><a href="/post/" style="color:var(--blue);font-weight:700">📰 단말기 정보</a></div>
   <a class="allbtn" href="/regions">📍 전체지역 보기 →</a>
   ${regionLinks?`<div class="reg">${regionLinks}</div>`:""}
   <div style="margin-top:10px;color:#9a9384">© 2026 24PAYSHOP. All rights reserved.</div>
@@ -2415,6 +2416,115 @@ function feedEntries(){
   out.sort(function(a,b){ return b.m-a.m; });
   return out.slice(0,60);
 }
+
+/* ===================== 정보성 글 (/post) =====================
+   글은 공용 D1 posts 테이블에 있고 이 사이트는 자기 글(published)만 읽는다.
+   발행 전환은 allcarestudy 워커의 크론 한 곳에서만 한다.
+
+   목록은 메모리에 5분 캐시한다 — 사이트맵·RSS·목록이 매 요청 D1 을 치면
+   응답이 느려지고 D1 읽기도 낭비된다. 본문은 상세 요청에서만 읽는다.
+   사이트맵·RSS 생성 함수는 동기라 인자로 넘기지 않고 이 캐시를 직접 읽는다.
+   (라우터가 응답을 만들기 직전 await loadPosts(env) 로 채워 준다) */
+const POST_SITE = "24payshop";
+const POST_ORIGIN = SITE;
+const POST_TTL = 300000;
+let POSTS_CACHE = { at: 0, rows: [] };
+async function loadPosts(env) {
+  if (Date.now() - POSTS_CACHE.at < POST_TTL) return POSTS_CACHE.rows;
+  if (!env || !env.DB) return POSTS_CACHE.rows;
+  try {
+    const r = await env.DB.prepare(
+      "SELECT slug,title,summary,published_at FROM posts WHERE site=? AND status='published' ORDER BY published_at DESC LIMIT 200"
+    ).bind(POST_SITE).all();
+    POSTS_CACHE = { at: Date.now(), rows: r.results || [] };
+  } catch (e) { POSTS_CACHE = { at: Date.now(), rows: POSTS_CACHE.rows }; }
+  return POSTS_CACHE.rows;
+}
+async function getPost(env, slug) {
+  if (!env || !env.DB) return null;
+  try {
+    return await env.DB.prepare(
+      "SELECT slug,title,summary,body_html,published_at FROM posts WHERE site=? AND slug=? AND status='published'"
+    ).bind(POST_SITE, slug).first();
+  } catch (e) { return null; }
+}
+const postEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const postDate = (p) => String((p && p.published_at) || "").slice(0, 10);
+
+/* 목록·상세 본문 — 사이트 CSS 에 의존하지 않도록 인라인 스타일만 쓴다.
+   바깥 컨테이너만 그 사이트의 클래스를 그대로 빌린다(고정 헤더 여백 때문). */
+function postCards(posts) {
+  if (!posts.length) return '<p style="color:#666">아직 등록된 글이 없습니다.</p>';
+  return posts.map((p) =>
+    '<a href="/post/' + postEsc(p.slug) + '/" style="display:block;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px 22px;margin-bottom:12px">'
+    + '<div style="font-size:17px;font-weight:800;line-height:1.4">' + postEsc(p.title) + '</div>'
+    + '<p style="font-size:14px;color:#555;line-height:1.7;margin:8px 0 0">' + postEsc(p.summary || "") + '</p>'
+    + '<div style="font-size:12px;color:#999;margin-top:8px">' + postEsc(postDate(p)) + '</div></a>').join("");
+}
+function postArticle(p) {
+  return '<div style="font-size:12px;color:#999;margin-bottom:18px">' + postEsc(postDate(p)) + ' · 24페이</div>'
+    + '<div class="post-body" style="font-size:15px;line-height:1.85;color:#333">' + p.body_html + '</div>'
+    + '<style>.post-body h2{font-size:19px;font-weight:800;line-height:1.4;margin:32px 0 12px;color:#111}'
+    + '.post-body h3{font-size:16px;font-weight:700;margin:22px 0 8px;color:#111}'
+    + '.post-body p{margin:0 0 14px}</style>';
+}
+
+/* 사이트맵·RSS 조각 — lastmod·pubDate 는 실제 발행일을 쓴다
+   (지역 페이지처럼 해시로 돌리면 글의 신선도 신호가 사라진다) */
+function postSitemapXml() {
+  const ps = POSTS_CACHE.rows || [];
+  const top = ps.length ? postDate(ps[0]) : new Date().toISOString().slice(0, 10);
+  return '<url><loc>' + POST_ORIGIN + '/post/</loc><lastmod>' + top + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>'
+    + ps.map((p) => '<url><loc>' + POST_ORIGIN + '/post/' + p.slug + '/</loc><lastmod>' + postDate(p)
+      + '</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>').join("");
+}
+function postRssXml() {
+  return (POSTS_CACHE.rows || []).map((p) => {
+    const dt = p.published_at ? new Date(p.published_at) : new Date();
+    const u = POST_ORIGIN + '/post/' + postEsc(p.slug) + '/';
+    return '<item><title>' + postEsc(p.title) + '</title><link>' + u + '</link>'
+      + '<guid isPermaLink="true">' + u + '</guid><pubDate>' + dt.toUTCString() + '</pubDate>'
+      + '<description>' + postEsc(p.summary || p.title) + '</description></item>';
+  }).join("");
+}
+/* 캐시 무효화 토큰 — 사이트맵을 Cache API 에 넣는 사이트는 키에 이 값을 붙인다.
+   글이 늘거나 새로 발행되면 값이 바뀌어 하루짜리 캐시를 기다리지 않아도 된다. */
+function postVer() {
+  const ps = POSTS_CACHE.rows || [];
+  return ps.length ? ps.length + "-" + postDate(ps[0]) : "0";
+}
+/* IndexNow — 최근 7일 안에 발행된 글은 배치 앞에 실어 색인을 앞당긴다 */
+function postFreshUrls() {
+  const fresh = (POSTS_CACHE.rows || [])
+    .filter((p) => p.published_at && Date.now() - Date.parse(p.published_at) < 7 * 86400000)
+    .map((p) => POST_ORIGIN + '/post/' + p.slug + '/');
+  return fresh.length ? fresh.concat([POST_ORIGIN + '/post/']) : [];
+}
+
+function pagePostList(posts) {
+  const body = `<div style="padding:24px 0 50px">
+<nav style="font-size:12px;color:#9a9384"><a href="/">홈</a> › 단말기 정보</nav>
+<h1 style="font-size:26px;line-height:1.35;margin:10px 0 8px">단말기 정보</h1>
+<p style="font-size:15px;line-height:1.85;margin-bottom:24px">카드단말기·포스기를 들일 때 사장님들이 실제로 묻는 것을 한 편씩 정리합니다. 장비 조합, 설치 절차, 운영 중 손볼 자리를 다룹니다.</p>
+${postCards(posts)}
+</div>`;
+  return shell({ title: `단말기 정보 | ${BRAND}`,
+    desc: `카드단말기·포스기 도입에 필요한 정보를 정리했습니다. 장비 조합, 설치 절차, 운영 중 손볼 자리까지 ${BRAND}이 한 편씩 올리는 매장 결제 안내입니다.`,
+    canonical: SITE + "/post/", ogimg: `${SITE}/thumb/card/seoul.svg`, jsonld: "", body });
+}
+function pagePost(p) {
+  const body = `<div style="padding:24px 0 50px">
+<nav style="font-size:12px;color:#9a9384"><a href="/">홈</a> › <a href="/post/">단말기 정보</a> › ${postEsc(p.title)}</nav>
+<h1 style="font-size:26px;line-height:1.35;margin:10px 0 8px">${postEsc(p.title)}</h1>
+${postArticle(p)}
+<p style="margin-top:26px"><a href="/post/">단말기 정보 전체</a> · <a href="/list">전체 목록</a> · <a href="/regions">전체 지역</a></p>
+</div>`;
+  return shell({ title: `${p.title} | ${BRAND}`, desc: (p.summary || p.title),
+    canonical: SITE + "/post/" + p.slug + "/", ogimg: `${SITE}/thumb/card/seoul.svg`, jsonld: "",
+    body, published: p.published_at || undefined, modified: p.published_at || undefined });
+}
+
 function rssFeed(){
   const items=feedEntries();
   let x='<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>';
@@ -2422,6 +2532,7 @@ function rssFeed(){
   x+="<link>"+SITE+"/</link>";
   x+="<description>전국 시·도, 시·군·구, 읍·면·동별 카드단말기·포스기 무료 설치 안내</description>";
   x+="<language>ko</language><lastBuildDate>"+new Date().toUTCString()+"</lastBuildDate>";
+  x+=postRssXml();   /* 정보성 글을 맨 앞에 둔다 */
   items.forEach(function(o){
     x+="<item><title>"+feedEsc(o.t)+"</title><link>"+o.u+"</link><guid>"+o.u+"</guid>";
     x+="<description>"+feedEsc(o.d)+"</description><pubDate>"+o.m.toUTCString()+"</pubDate></item>";
@@ -2475,6 +2586,7 @@ function smAddLastmod(xml){
 }
 function sitemap(){
   const u=[`<url><loc>${SITE}/</loc><priority>1.0</priority></url>`,
+    postSitemapXml(),   /* 정보성 글 — lastmod 는 실제 발행일 */
     `<url><loc>${SITE}/list</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/regions</loc><priority>0.6</priority></url>`,
     ...PROD_ORDER.map(k=>`<url><loc>${SITE}/${PROD[k].path}</loc><priority>0.7</priority></url>`)];
@@ -2640,7 +2752,8 @@ function siteUrls(all){
   return u;
 }
 async function indexnowSubmit(all){
-  const urls=siteUrls(all);
+  /* 최근 7일 안에 발행된 글은 배치 앞에 실어 색인을 앞당긴다 */
+  const urls=postFreshUrls().concat(siteUrls(all));
   const keyLocation=`${SITE}/${INDEXNOW_KEY}.txt`, host=SITE.replace(/^https?:\/\//,"");
   const out=[]; 
   for(let i=0;i<urls.length;i+=5000){
@@ -2816,8 +2929,17 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
     if(path==="/og.svg") return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a1712"/><stop offset="1" stop-color="#ff5a36"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/><rect x="60" y="60" width="1080" height="510" rx="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/><text x="600" y="300" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="86" font-weight="800" fill="#ffffff">24페이샵</text><text x="600" y="378" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="34" font-weight="500" fill="rgba(255,255,255,.88)">전국 카드단말기·포스기 무료 설치</text><text x="600" y="530" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="28" font-weight="600" fill="rgba(255,255,255,.72)">24payshop.com</text></svg>`,{headers:{"content-type":"image/svg+xml; charset=UTF-8","cache-control":"public, max-age=86400"}});
     if(path==="/favicon.svg") return new Response(FAVICON_SVG,{headers:{"content-type":"image/svg+xml; charset=utf-8","cache-control":"public,max-age=2592000"}});
     if(path==="/llms.txt") return new Response(llms,{headers:H_TXT});
+    /* 사이트맵·RSS 생성 함수는 동기라 POSTS_CACHE 를 먼저 채워 준다 */
+    if(path.startsWith("/sitemap")||path==="/rss.xml"||path==="/rss"||path==="/feed"||path==="/atom.xml"||path==="/atom") await loadPosts(env);
     if(path==="/rss.xml"||path==="/rss"||path==="/feed") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), SITE+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
+    /* 정보성 글 — 지역 슬러그 판정보다 앞에 둔다. path 는 위에서 뒤 슬래시를 떼었다 */
+    if(path==="/post") return new Response(pagePostList(await loadPosts(env)),{headers:H_HTML});
+    if(path.startsWith("/post/")){
+      const __s=path.slice(6);
+      if(__s && __s.indexOf("/")<0){ const __p=await getPost(env,__s); if(__p) return new Response(pagePost(__p),{headers:H_HTML}); }
+      return new Response(notFound(),{status:404,headers:H_HTML});
+    }
     if(path==="/sitemap.xml") return new Response(sitemap(),{headers:H_XML});
     if(path==="/list") return new Response(pageList(),{headers:H_HTML});
     if(path==="/regions") return new Response(sidoIndex(null),{headers:H_HTML});
@@ -2842,7 +2964,10 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
 
 export default {
   /* 매일 1회 IndexNow 자동 제출 (cron 은 wrangler.toml [triggers]) */
-  async scheduled(event, env, ctx){ ctx.waitUntil(indexnowSubmit(false)); },
+  async scheduled(event, env, ctx){
+    try{ POSTS_CACHE.at=0; await loadPosts(env); }catch(e){}
+    ctx.waitUntil(indexnowSubmit(false));
+  },
   async fetch(request, env, ctx){
     const res = await handleFetch(request, env, ctx);
     logCrawl(env, ctx, request, res.status);      /* 실패해도 응답에는 영향 없음 */
