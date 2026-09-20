@@ -192,6 +192,18 @@ async function indexnowFetch(opt){
   return last||{status:0};
 }
 
+/* 네이버는 IndexNow 참여 엔드포인트지만 위 폴백 체인에 넣으면 안 된다 — 체인은 한 곳이
+   200 을 주는 순간 멈추므로 yandex 가 먼저 성공하면 네이버로는 영영 안 간다.
+   따로 보내고 status 를 따로 남긴다. 루트 URL "https://도메인/" 하나만 담긴 배치는
+   422 "Invalid urls" 를 주지만, 하위 경로가 섞인 배치는 200 이다(2026-09-21 실측). */
+const INDEXNOW_NAVER_EP = "https://searchadvisor.naver.com/indexnow";
+async function indexnowNaver(body){
+  try{
+    const r=await fetch(INDEXNOW_NAVER_EP,{method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body});
+    return r.status;
+  }catch(e){ return 0; }
+}
+
 /* ═══════════════ 크롤러 방문 기록 ═══════════════
    기존 집계(events)는 브라우저가 실행하는 /api/track 비컨으로만 채워진다.
    크롤러는 JS 를 돌리지 않으므로 events 에는 영원히 한 줄도 안 남는다.
@@ -2781,11 +2793,15 @@ async function indexnowSubmit(all){
   for(let i=0;i<urls.length;i+=5000){
     const chunk=urls.slice(i,i+5000);
     try{
-      const resp=await indexnowFetch({method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body:JSON.stringify({host,key:INDEXNOW_KEY,keyLocation,urlList:chunk})});
-      out.push(`${chunk.length}건 → HTTP ${resp.status}`);
+      const body=JSON.stringify({host,key:INDEXNOW_KEY,keyLocation,urlList:chunk});
+      const [resp,naver]=await Promise.all([
+        indexnowFetch({method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body}),
+        indexnowNaver(body)
+      ]);
+      out.push(`${chunk.length}건 → HTTP ${resp.status} · 네이버 ${naver}`);
     }catch(e){out.push(`${chunk.length}건 → 오류: ${e.message}`);}
   }
-  return `IndexNow 제출 완료\n대상: ${all?"전체 페이지":"허브+시도+구 콘텐츠"} (${urls.length}개 URL)\n`+out.join("\n")+`\n\n* 200/202 = 성공. Bing·네이버·얀덱스에 전달됨.`;
+  return `IndexNow 제출 완료\n대상: ${all?"전체 페이지":"허브+시도+구 콘텐츠"} (${urls.length}개 URL)\n`+out.join("\n")+`\n\n* 200/202 = 성공. 앞쪽은 IndexNow 공용(빙·얀덱스 계열), 뒤쪽은 네이버 서치어드바이저 직접 제출.`;
 }
 
 
