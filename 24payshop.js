@@ -429,6 +429,17 @@ const HOME_HTML = `<!DOCTYPE html>
   .callbar a svg{width:18px;height:18px;fill:#fff}
   .callbar .ph{font-family:var(--mono);font-weight:700;font-size:14px}
 
+  /* 모바일: 하단 전체폭 바는 홈 인디케이터·툴바와 겹쳐 오터치가 난다 → 우측 세로 원형 버튼 */
+  .callbar .cbrow,.callbar.cbrow{display:flex;gap:8px}
+  .callbar .cbrow>a,.callbar.cbrow>a{flex:1}
+  .callbar .cb-sms{background:#3b7df6}
+  @media(max-width:768px){
+    .callbar{left:auto;right:14px;top:50%;bottom:auto;transform:translateY(-50%);width:auto;max-width:none;background:none;padding:0}
+    .callbar .cbrow,.callbar.cbrow{flex-direction:column;gap:12px}
+    .callbar .cbrow>a,.callbar.cbrow>a{flex:none;width:54px;height:54px;border-radius:50%;gap:0;padding:0;font-size:22px;box-shadow:0 8px 20px -6px rgba(0,0,0,.45)}
+    .callbar .cb-t{display:none}
+  }
+
   @keyframes print{from{clip-path:inset(0 0 100% 0);transform:translateY(-8px)}to{clip-path:inset(0 0 0 0);transform:none}}
   @keyframes slam{0%{transform:rotate(-30deg) scale(1.9);opacity:0}55%{opacity:.92}100%{transform:rotate(-13deg) scale(1);opacity:.86}}
   @keyframes pop{0%{transform:rotate(-8deg) scale(0)}70%{transform:rotate(-8deg) scale(1.25)}100%{transform:rotate(-8deg) scale(1)}}
@@ -587,7 +598,7 @@ const HOME_HTML = `<!DOCTYPE html>
   </footer>
 </div>
 
-<div class="callbar" style="display:flex;gap:8px;padding-left:14px;padding-right:14px"><a href="tel:01098768282" style="flex:1">📞 전화 상담</a><a href="sms:01098768282" style="flex:1;background:#3b7df6">💬 문자 상담</a></div>
+<div class="callbar cbrow"><a href="tel:01098768282" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><a href="sms:01098768282" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script>
 <script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script>
 </body>
@@ -2032,6 +2043,17 @@ p{margin:11px 0}
 .callbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--ink);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .callbar .in{max-width:720px;margin:0 auto}
 .callbar a{display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:13px;background:var(--green);color:#fff;text-decoration:none;font-weight:800;font-size:17px}
+/* 모바일: 하단 전체폭 바는 홈 인디케이터·툴바와 겹쳐 오터치가 난다 → 우측 세로 원형 버튼 */
+.callbar .cbrow,.callbar.cbrow{display:flex;gap:8px}
+.callbar .cbrow>a,.callbar.cbrow>a{flex:1}
+.callbar .cb-sms{background:var(--blue)}
+@media(max-width:768px){
+  .callbar{left:auto;right:14px;top:50%;bottom:auto;transform:translateY(-50%);width:auto;max-width:none;background:none;padding:0}
+  .callbar .cbrow,.callbar.cbrow{flex-direction:column;gap:12px}
+  .callbar .cbrow>a,.callbar.cbrow>a{flex:none;width:54px;height:54px;border-radius:50%;gap:0;padding:0;font-size:22px;box-shadow:0 8px 20px -6px rgba(0,0,0,.45)}
+  .callbar .cb-t{display:none}
+}
+
 .idx{columns:2;column-gap:18px;margin-top:8px}.idx a{display:block;font-size:14px;padding:5px 0;text-decoration:none;color:var(--ink);break-inside:avoid}
 .idx a:hover{color:var(--blue)}.idx .alpha{font-weight:800;color:var(--amber);padding:12px 0 4px;break-after:avoid}
 .idx a small{color:var(--dim);font-size:11px;margin-left:4px}
@@ -2066,7 +2088,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 <style>${CSS}</style>
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
-<div class="callbar"><div class="in" style="display:flex;gap:8px"><a href="tel:${TELRAW}" style="flex:1">📞 전화 상담</a><a href="sms:${TELRAW}" style="flex:1;background:var(--blue)">💬 문자 상담</a></div></div>
+<div class="callbar"><div class="in cbrow"><a href="tel:${TELRAW}" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><a href="sms:${TELRAW}" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
 }
 
