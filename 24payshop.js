@@ -2090,6 +2090,10 @@ const CSS=`
 .fpcase b{display:block;font-size:15px;font-weight:800;margin-bottom:6px}
 .fpcase span{display:block;font-size:13.5px;line-height:1.75;color:#475569;margin:3px 0}
 .fpcase i{display:inline-block;min-width:60px;font-style:normal;font-weight:800;color:#0f172a}
+.polbox{background:#f8fafc;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:13.5px;line-height:1.75}
+.polbox b{display:block;color:var(--green);font-size:12.5px;font-weight:800;margin-bottom:3px}
+.polbox span{color:#475569}
+.polbox a{display:inline-block;margin-top:5px;color:#0f172a;font-weight:700;text-decoration:underline}
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--ink:#231d16;--dim:#6f6a60;--paper:#fffdf7;--line:#ece4d2;--bar:70px;
@@ -2274,7 +2278,8 @@ function productPage(type,slug,ov){
   const jsonld=JSON.stringify({"@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))},
     {"@type":"Service","serviceType":`${P.name} 설치`,"areaServed":name,"provider":{"@type":"LocalBusiness","name":BRAND,"telephone":`+82-${TELRAW}`,"image":ogimg},"name":title,"description":desc,"url":canonical},
-    {"@type":"FAQPage","mainEntity":faqs.map(([q,a])=>({"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}}))}]});
+    {"@type":"FAQPage","mainEntity":faqs.map(([q,a])=>({"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}}))},
+    {"@type":"Article","headline":M.h1,"description":desc,"datePublished":iso(pub),"dateModified":iso(mod),"author":{"@type":"Organization","name":AUTHOR24},"publisher":{"@type":"Organization","name":BRAND},"mainEntityOfPage":canonical,"image":ogimg}]});
 
   const otherP=PROD[P.other];
   const otherLink=`<div style="margin-top:6px">👉 같은 지역 <a href="${otherHref}">${esc(name)} ${otherP.name} 설치</a> 도 보기</div>`;
@@ -2294,7 +2299,7 @@ ${bcHtml}
   ${photoUrl(ogslug,type)?`<img src="${photoUrl(ogslug,type)}" data-raw="${rawUrl(ogslug,type)}" alt="${esc(LOC)} ${P.name} 설치" loading="eager" onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw}else{this.style.display='none'}">`:""}
   <div class="ov"><span class="tag">${M.badge}</span><h1>${M.h1}</h1></div>
 </div>
-<div class="dates">${pick(DLBL.pub,key,"dp")} <b>${kd(pub)}</b>&nbsp; · &nbsp;${pick(DLBL.mod,key,"dm")} <b>${kd(mod)}</b></div>
+<div class="dates">${pick(DLBL.pub,key,"dp")} <b>${kd(pub)}</b>&nbsp; · &nbsp;${pick(DLBL.mod,key,"dm")} <b>${kd(mod)}</b>&nbsp; · &nbsp;✍️ 작성 <b>${AUTHOR24}</b></div>
 
 <p class="lead">${esc(fill(leads[0]))}</p><p>${esc(fill(leads[1]))}</p>
 
@@ -2331,6 +2336,7 @@ ${HX("faq","h2")}
 ${HX("check","h2")}
 <p>${esc(fill(pick(K.checkIntro,key,"chk")))}</p>
 <div class="check">${chk.map(it=>`<div class="ci">${it}</div>`).join("")}</div>
+${xpPolicyShort(key)}
 
 <p style="margin-top:18px;font-weight:600">${esc(fill(closes[0]))}</p><p>${esc(fill(closes[1]))}</p>
 <a class="cta" href="tel:${TELRAW}">${esc(fill(pick(K.cta,key,"cta")))} <span class="ar">▶</span></a>
@@ -3064,6 +3070,43 @@ function blockScraper(request){
    숫자는 D1 실측만 쓴다. 없는 데이터는 없다고 적는다. */
 /* 작성자. 11단계에서 지역 페이지·푸터에도 같은 문자열을 쓴다 */
 const AUTHOR24 = "24페이샵 설치팀";
+/* ── A/S·해지 정책 ───────────────────────────────────────────
+   정본은 /trust#policy 한 곳이다. 지역 페이지에는 두 줄 요약과 링크만 둔다.
+   같은 내용을 두 군데 길게 적으면 한쪽만 고쳐질 때 서로 어긋난다. */
+const XP_POLICY_ITEMS = [
+  ["A/S", "가능합니다. 고장 접수는 전화로 받고, 원격으로 안 되면 방문합니다."],
+  ["기기 교체", "가능합니다. 쓰시던 조건은 그대로 두고 기기만 바꿉니다."],
+  ["해지 위약금", "없습니다. 중간에 그만두셔도 따로 무는 돈이 없습니다."],
+  ["해지 절차", "전화로 말씀해 주시면 됩니다. 사유를 길게 설명하지 않으셔도 됩니다."],
+  ["기기 반납", "해지 시 설치한 기기를 회수합니다. 회수 일정은 매장 사정에 맞춥니다."]
+];
+function xpPolicy(){
+  return `<h2 class="sh green" id="policy"><span>A/S 와 해지는 어떻게 되나요?</span></h2>`
+    + `<p>A/S 가능, 기기 교체 가능, 해지 위약금 없음입니다. 아래가 전부입니다.</p>`
+    + `<table class="fptbl">${XP_POLICY_ITEMS.map(x=>`<tr><th>${esc(x[0])}</th><td>${esc(x[1])}</td></tr>`).join("")}</table>`
+    + `<p class="fpnote">약정 기간과 기기값 정산 방식은 설치 조건에 따라 달라져 통화에서 안내드립니다.</p>`;
+}
+/* 요약 문구도 풀로. 고정 문구로 두면 전 페이지가 같은 문단을 공유해 유사도가 오른다 */
+const XP_POLICY_SHORT = [
+ "A/S 와 기기 교체 모두 되고 해지 위약금은 없습니다. 고장은 전화로 접수합니다.",
+ "고장 나면 전화 한 통으로 접수됩니다. 교체도 되고 해지할 때 무는 돈은 없습니다.",
+ "해지 위약금 조항이 없습니다. A/S 와 기기 교체는 쓰시는 동안 계속 됩니다.",
+ "쓰시다 그만두셔도 따로 드는 돈이 없습니다. A/S 와 교체는 그대로 이어집니다.",
+ "기기가 멈추면 원격으로 먼저 보고, 안 되면 방문합니다. 해지 위약금은 받지 않습니다.",
+ "교체든 해지든 전화로 말씀만 주시면 됩니다. 위약금은 붙지 않습니다.",
+ "A/S 는 전화 접수 뒤 원격·방문 순으로 갑니다. 해지에 위약금이 없습니다.",
+ "설치 뒤에도 조건은 그대로입니다. 교체 가능하고 해지 위약금은 없습니다.",
+ "기기 교체에 횟수 제한을 두지 않습니다. 해지할 때 무는 돈도 없습니다.",
+ "고장·교체·해지 모두 전화 한 통이면 됩니다. 위약금 조항이 없습니다.",
+ "쓰던 조건을 그대로 두고 기기만 바꿀 수 있습니다. 해지 위약금은 없습니다.",
+ "A/S 와 교체는 계속 되고, 그만두실 때 위약금은 청구하지 않습니다."];
+const XP_POLICY_LINK = ["자세한 기준 보기 →","A/S·해지 기준 전문 →","어떻게 진행되는지 보기 →","정책 전문 확인 →"];
+function xpPolicyShort(key){
+  return `<div class="polbox"><b>A/S · 해지</b>`
+    + `<span>${esc(pick(XP_POLICY_SHORT,key,"pols"))}</span>`
+    + `<a href="/trust#policy">${esc(pick(XP_POLICY_LINK,key,"poll"))}</a></div>`;
+}
+
 const XP_ORDER = ["compare","fit","cost","trust","cases","faq","prepare"];
 const XP_NAV = {compare:"제품 비교", fit:"우리 매장 적합성", cost:"비용 결정 요인",
                 trust:"업체·기사 검증", cases:"구성 예시", faq:"상담 FAQ", prepare:"전화 전 준비"};
@@ -3201,8 +3244,7 @@ function xpBody(slug){
     S.push(xpSec("기기는 정품인지 어떻게 확인하나요?",
       `<p>설치할 때 기기와 사용법을 매장에서 직접 확인시켜 드립니다. 모델명과 일련번호를 설치 시점에 같이 확인하시면 됩니다.</p>`
       + `<p>계약 조건은 말로만 하지 않고 서면으로 남깁니다. 나중에 "그런 말 없었다" 가 생기지 않게 하기 위해서입니다.</p>`,"blue"));
-    S.push(xpSec("A/S 와 해지는 어떻게 되나요?",
-      `<p>A/S 가능, 기기 교체 가능, 해지 위약금 없음입니다. 자세한 기준은 통화에서 안내드립니다.</p>`,"green"));
+    S.push(xpPolicy());
   }
   if(slug==="cases"){
     S.push(xpSec("이 페이지의 사례는 실제 사례인가요?",
