@@ -2073,6 +2073,24 @@ PACK.vending={
 
 /* ===== CSS ===== */
 const CSS=`
+.fph1{font-size:24px;font-weight:900;line-height:1.35;margin:14px 0 10px;word-break:keep-all}
+.fptoc{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+.fptoc b{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.fptoc ul{margin:0;padding-left:18px}
+.fptoc li{font-size:13.5px;line-height:1.85;color:#475569}
+.fptbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+.fptbl th,.fptbl td{border:1px solid var(--line);padding:9px 11px;text-align:left}
+.fptbl tr:first-child th{background:#f1f5f9;font-weight:800}
+.fptbl th{background:#f8fafc;font-weight:700;white-space:nowrap}
+.fpnote{font-size:12.5px;color:#64748b;line-height:1.7;margin:8px 0}
+.fpchips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.fpchips a{display:inline-block;padding:8px 14px;border-radius:999px;background:#f1f5f9;border:1px solid var(--line);font-size:13.5px;font-weight:700;color:#334155;text-decoration:none}
+.fpcase{padding:12px 0;border-bottom:1px dashed var(--line)}
+.fpcase:last-child{border-bottom:0}
+.fpcase b{display:block;font-size:15px;font-weight:800;margin-bottom:6px}
+.fpcase span{display:block;font-size:13.5px;line-height:1.75;color:#475569;margin:3px 0}
+.fpcase i{display:inline-block;min-width:60px;font-style:normal;font-weight:800;color:#0f172a}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--ink:#231d16;--dim:#6f6a60;--paper:#fffdf7;--line:#ece4d2;--bar:70px;
 --red:#f5565b;--red-t:#ffecec;--green:#2bb461;--green-t:#e9f9f0;--blue:#4f8dff;--blue-t:#ecf3ff;--amber:#ff9e1b;--amber-t:#fff3e0;--purple:#9b72ff;--purple-t:#f3edff}
@@ -2701,6 +2719,7 @@ function sitemap(){
     postSitemapXml(),   /* 정보성 글 — lastmod 는 실제 발행일 */
     `<url><loc>${SITE}/list</loc><priority>0.7</priority></url>`,
     `<url><loc>${SITE}/regions</loc><priority>0.6</priority></url>`,
+    ...XP_ORDER.map(k=>`<url><loc>${SITE}/${k}</loc><priority>0.7</priority></url>`),
     ...PROD_ORDER.map(k=>`<url><loc>${SITE}/${PROD[k].path}</loc><priority>0.7</priority></url>`)];
   for(const [sn,ssl] of SIDO_ORDER){if(SIDO_GROUPS[sn]&&SIDO_GROUPS[sn].length){
     for(const k of PROD_ORDER) u.push(`<url><loc>${SITE}/${PROD[k].path}/sido/${ssl}</loc><priority>0.65</priority></url>`);
@@ -2774,6 +2793,7 @@ Disallow: /
 
 # llms.txt: ${SITE}/llms.txt
 Llms-txt: ${SITE}/llms.txt
+# 안내 페이지: ${SITE}/compare ${SITE}/fit ${SITE}/cost ${SITE}/trust ${SITE}/cases ${SITE}/faq ${SITE}/prepare
 # 전체 목록: ${SITE}/list
 Sitemap: ${SITE}/sitemap.xml
 #DaumWebMasterTool:63fcdac789d520facff2d8ecdc96f26c991a1afcd2719e4e4136718817148a77:KqMtrRaDniV96GOxiqaKXg==
@@ -2783,6 +2803,15 @@ const LLMS_SGG_N  = new Set(REGIONS.map(function(r){return r[1];}).filter(Boolea
 const llms=`# ${BRAND} (24PAYSHOP) — ${SITE}
 
 > ${BRAND}은 전국 어디서나 카드단말기와 포스기(POS)를 무료로 설치해 주는 결제 단말기 설치 전문 업체입니다. 전화 한 통이면 매장에서 가까운 기사님이 직접 방문해 설치하고, 설치비·가맹비·관리비 없이 평생 A/S를 제공합니다. 카페·음식점·미용실·편의점 등 업종을 가리지 않고 신규 개업과 기존 단말기 교체를 모두 다룹니다. 문의는 ${TEL}.
+
+## 안내 페이지 (지역·제품과 무관한 판단 기준)
+- 카드단말기·포스기·키오스크 비교: ${SITE}/compare
+- 우리 매장 적합성 판단: ${SITE}/fit
+- 설치 비용을 정하는 요인(금액 비공개): ${SITE}/cost
+- 설치 기사 검증 3단계·A/S·해지: ${SITE}/trust
+- 업종별 구성 예시(실제 사례 아님): ${SITE}/cases
+- 상담 FAQ: ${SITE}/faq
+- 전화 전 준비: ${SITE}/prepare
 
 ## 주요 서비스
 - 카드단말기 설치 — 유선 데스크형과 무선 휴대형 모두 취급, 신용·체크카드와 삼성페이·카카오페이·네이버페이 등 간편결제 지원
@@ -2869,7 +2898,8 @@ const binResp=(b64,ct)=>new Response(Uint8Array.from(atob(b64),c=>c.charCodeAt(0
 
 /* ===== IndexNow 일괄 제출용 URL 목록 ===== */
 function siteUrls(all){
-  const u=[SITE+"/",SITE+"/list",...PROD_ORDER.map(k=>`${SITE}/${PROD[k].path}`),SITE+"/regions"];
+  const u=[SITE+"/",SITE+"/list",...PROD_ORDER.map(k=>`${SITE}/${PROD[k].path}`),SITE+"/regions",
+    ...XP_ORDER.map(k=>`${SITE}/${k}`)];
   for(const [n,sl] of SIDO_ORDER){if(SIDO_GROUPS[n]&&SIDO_GROUPS[n].length){for(const k of PROD_ORDER)u.push(`${SITE}/${PROD[k].path}/sido/${sl}`);u.push(`${SITE}/regions/sido/${sl}`);}}
   for(const sd of Object.keys(GUGUN_SLUG)){const ssl=SIDO_NAME2SLUG.get(sd);if(!ssl)continue;for(const [gg,gsl] of GUGUN_SLUG[sd].fwd){for(const k of PROD_ORDER)u.push(`${SITE}/${PROD[k].path}/sido/${ssl}/${gsl}`);}}
   if(all){for(const [name] of REGIONS){const sl=slugOf.get(name);for(const k of PROD_ORDER)u.push(`${SITE}/${PROD[k].path}/${sl}`);}}
@@ -3029,6 +3059,249 @@ function blockScraper(request){
   return null;
 }
 
+/* ── 고정 안내 페이지 7개 ─────────────────────────────────────
+   지역x제품 페이지가 아니라 판단 기준을 담는 곳이다.
+   숫자는 D1 실측만 쓴다. 없는 데이터는 없다고 적는다. */
+/* 작성자. 11단계에서 지역 페이지·푸터에도 같은 문자열을 쓴다 */
+const AUTHOR24 = "24페이샵 설치팀";
+const XP_ORDER = ["compare","fit","cost","trust","cases","faq","prepare"];
+const XP_NAV = {compare:"제품 비교", fit:"우리 매장 적합성", cost:"비용 결정 요인",
+                trust:"업체·기사 검증", cases:"구성 예시", faq:"상담 FAQ", prepare:"전화 전 준비"};
+/* D1 실측. 갱신하면 이 블록만 고치면 된다 */
+const XP_STAT = {
+  from:"2026-07-04", to:"2026-09-22", views:13563,
+  prod:[["카드단말기",7216],["포스기",6195],["키오스크",4],["테이블오더",0],["자동판매기",0]],
+  etc:148,
+  kw:[["진안읍 카드단말기",3],["화성시단말기",2],["대구 북구 포스기",2],["경북카드단말기",2],
+      ["해남 카드단말기",1],["춘천카드단말기",1],["천안포스기",1]],
+  dev:[["모바일",68],["PC",64]]
+};
+function xpNote(){ return `<p class="fpnote">${XP_STAT.from} ~ ${XP_STAT.to} · 이 사이트 조회 ${XP_STAT.views.toLocaleString()}건 기준입니다.</p>`; }
+function xpSec(h, inner, color){ return `<h2 class="sh ${color||"blue"}"><span>${esc(h)}</span></h2>${inner}`; }
+function xpList(items, ic){ return `<div class="check">${items.map(x=>`<div class="ci">${ic||"✅"} ${esc(x)}</div>`).join("")}</div>`; }
+function xpPairs(items){ return `<div class="check">${items.map(x=>`<div class="ci">🚫 ${esc(x[0])} — ${esc(x[1])}</div>`).join("")}</div>`; }
+function xpTable(rows, head){
+  return `<table class="fptbl"><tr><th>${esc(head[0])}</th><th>${esc(head[1])}</th></tr>`
+    + rows.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(String(r[1]))}</td></tr>`).join("") + `</table>`;
+}
+function xpSteps(steps){
+  return `<div class="steps">` + steps.map((st,i)=>
+    `<div class="step s${i+1}"><div class="c">${i+1}</div><div><h4>${esc(st[0])}</h4><p>${esc(st[1])}</p></div></div>`
+    + (i<steps.length-1?`<div class="stepar">↓</div>`:"")).join("") + `</div>`;
+}
+function xpNav(cur){
+  return xpSec("다른 안내도 볼까요?", `<div class="fpchips">`
+    + XP_ORDER.filter(k=>k!==cur).map(k=>`<a href="/${k}">${esc(XP_NAV[k])}</a>`).join("") + `</div>`, "purple");
+}
+/* 구성 예시 6건 — 실제 사례가 아니다. 매출·수치를 넣지 않는다 */
+const XP_CASES = [
+ ["테이크아웃 카페","카운터 하나에 혼자 서시는 경우","카드단말기 1대",
+  "무선형을 카운터에 두고 간편결제까지 한 번에 받게 합니다. 영수증 프린터를 붙일지는 손님 요청 빈도를 보고 정합니다.",
+  "포장 주문이 몰리는 시간대가 길면 단말기만으로는 줄이 안 빠집니다. 그때는 키오스크를 같이 봅니다."],
+ ["테이블 10석 안팎 식당","홀 주문을 받아 적다 놓치는 경우","포스기 1대 + 테이블오더",
+  "포스기로 주문·정산을 묶고, 테이블오더를 좌석 수에 맞춰 넣습니다. 주방 프린터와 연결해 전표가 바로 나가게 합니다.",
+  "메뉴가 자주 바뀌면 등록을 계속 손봐야 합니다. 메뉴판을 먼저 정리하고 들어가는 편이 낫습니다."],
+ ["점심에 몰리는 분식집","한 시간에 손님이 몰려 주문이 막히는 경우","키오스크 1대 + 카드단말기",
+  "키오스크로 주문을 받아 조리와 주문을 떼어 놓고, 현장 결제용으로 단말기를 함께 둡니다.",
+  "매장이 좁으면 키오스크 앞에 줄이 서면서 동선이 막힙니다. 설치 전에 자리부터 봐야 합니다."],
+ ["무인 매장","사람 없이 돌려야 하는 경우","자동판매기 + 무인 결제",
+  "상품 구성에 맞춰 냉장·상온 칸을 나누고, 결제와 재고 확인을 원격으로 볼 수 있게 맞춥니다.",
+  "재고를 채우러 가는 주기가 결국 사람 일입니다. 자리가 멀면 그 시간이 계속 듭니다."],
+ ["미용실·네일샵","예약과 결제가 따로 도는 경우","포스기 1대",
+  "예약·회원 정보와 결제를 한 화면에서 보게 맞춥니다. 재방문 주기를 확인할 수 있게 구성합니다.",
+  "기존에 쓰던 예약 프로그램이 있으면 연동 가능 여부를 먼저 확인해야 합니다."],
+ ["기존 매장 기기 교체","약정이 끝나 조건을 다시 보는 경우","현행 구성 유지 + 교체",
+  "쓰던 방식은 그대로 두고 기기만 바꿉니다. 기존 데이터를 옮길 수 있는지부터 확인하고 일정을 잡습니다.",
+  "약정이 남아 있으면 위약금이 생길 수 있습니다. 남은 기간부터 확인하는 게 먼저입니다."]
+];
+function xpCaseCards(){
+  return `<div class="check">` + XP_CASES.map((c,i)=>
+    `<div class="fpcase"><b>${i+1}. ${esc(c[0])}</b>`
+    + `<span><i>어떤 상황</i>${esc(c[1])}</span>`
+    + `<span><i>구성</i>${esc(c[2])}</span>`
+    + `<span><i>진행</i>${esc(c[3])}</span>`
+    + `<span><i>한계</i>${esc(c[4])}</span></div>`).join("") + `</div>`;
+}
+
+function xpBody(slug){
+  const S=[];
+  if(slug==="compare"){
+    S.push(xpSec("카드단말기와 포스기는 무엇이 다른가요?",
+      `<p>카드단말기는 결제만 받습니다. 포스기는 주문·매출 집계·정산·재고까지 한 화면에서 처리합니다. 그래서 "결제만 되면 되는 매장"과 "매장 운영을 묶어야 하는 매장"이 갈립니다.</p>`
+      + `<p>카운터 하나에서 계산만 하신다면 단말기로 충분합니다. 메뉴가 많고 홀이 있고 마감 정산에 시간이 걸린다면 포스기 쪽입니다.</p>`,"blue"));
+    S.push(xpSec("키오스크는 언제 필요한가요?",
+      `<p>사람이 받던 주문을 화면이 대신 받게 할 때입니다. 결제 수단을 늘리는 문제가 아니라 <b>주문을 누가 받느냐</b>의 문제입니다.</p>`
+      + xpList(["점심·저녁 한 시간에 주문이 몰릴 때","주문 받느라 조리가 밀릴 때","사람을 구하기 어려울 때","단순 반복 주문이 대부분일 때"])
+      + `<p>반대로 손님과 대화가 필요한 업종이면 키오스크가 오히려 걸림돌이 됩니다.</p>`,"amber"));
+    S.push(xpSec("테이블오더는 어떤 매장에 맞나요?",
+      `<p>좌석이 있고, 홀에서 추가 주문이 계속 나오는 매장입니다. 고깃집·술집처럼 손님이 부르고 직원이 달려가는 일이 반복되는 곳에서 차이가 큽니다.</p>`
+      + `<p>좌석이 적거나 회전이 빠른 테이크아웃 위주면 굳이 필요하지 않습니다.</p>`,"purple"));
+    S.push(xpSec("여러 대를 같이 써야 하나요?",
+      `<p>같이 쓰는 경우가 흔합니다. 다만 겹치게 놓으면 돈만 들고 끝납니다. 역할을 나눠야 합니다.</p>`
+      + xpList(["키오스크는 주문, 단말기는 현장 결제","포스기는 정산, 테이블오더는 홀 주문","무인 시간대만 자동판매기"],"🔗")
+      + `<p>세 가지를 동시에 늘리는 건 대부분 나중에 하나를 빼게 됩니다.</p>`,"green"));
+    S.push(xpSec("뭘 먼저 놓아야 하나요?",
+      `<p>결제가 안 되면 장사가 안 되니 결제 수단이 먼저입니다. 그다음이 주문을 받는 방식, 마지막이 정산과 관리입니다.</p>`
+      + `<p>참고로 이 사이트에서 어떤 제품 페이지가 많이 열렸는지는 아래와 같습니다. 문의가 많은 제품이라기보다 <b>찾아보는 사람이 많은 제품</b>으로 읽어 주세요.</p>`
+      + xpTable(XP_STAT.prod.map(x=>[x[0], x[1].toLocaleString()+"건"]),["제품","조회"]) + xpNote()
+      + `<p class="fpnote">제품이 지정되지 않은 페이지 ${XP_STAT.etc.toLocaleString()}건은 위 표에서 뺐습니다. 테이블오더·자동판매기는 페이지가 있는데도 조회가 잡히지 않았습니다.</p>`,"red"));
+  }
+  if(slug==="fit"){
+    S.push(xpSec("우리 매장에 지금 필요한 게 맞나요?",
+      xpList(["현금만 받다가 손님을 돌려보낸 적이 있을 때","피크 시간에 계산대 앞이 막힐 때","마감 정산에 매번 시간이 걸릴 때","지금 쓰는 기기가 자주 멈출 때","매출을 손으로 적고 있을 때","약정이 끝나 조건을 다시 볼 때"])
+      + `<p>공통점은 '사람 손으로 메우고 있는 일이 반복된다'는 것입니다. 그 일이 매일 반복되면 기기를 바꿀 때입니다.</p>`,"green"));
+    S.push(xpSec("설치를 권하지 않는 경우도 있나요?",
+      `<p>있습니다. 아래에 해당하면 지금은 설치할 때가 아닙니다. 대안을 같이 적습니다.</p>`
+      + xpPairs([["계약 약정이 많이 남았을 때","남은 기간부터 확인하는 게 먼저입니다"],["곧 매장을 옮길 계획일 때","옮긴 뒤에 설치하는 편이 낫습니다"],["지금 기기가 멀쩡하게 도는 중일 때","그대로 쓰셔도 됩니다"],["사업자등록이 아직 안 났을 때","등록 뒤에 진행하는 게 빠릅니다"],["인터넷·전화 회선이 아직 없을 때","회선부터 넣어야 합니다"],["본사가 기기를 지정하는 프랜차이즈일 때","본사 정책을 먼저 확인하세요"]])
+      + `<p>제품 사이에서 고민 중이시면 <a href="/compare">제품 비교</a>를 먼저 보세요.</p>`,"red"));
+    S.push(xpSec("업종에 따라 무엇이 달라지나요?",
+      `<p>업종 자체보다 <b>주문이 어디서 발생하느냐</b>가 기준입니다. 카운터에서만 생기면 단말기, 좌석에서 생기면 테이블오더, 줄에서 생기면 키오스크 쪽입니다.</p>`
+      + `<p class="fpnote">업종별 설치 현황은 이 사이트 페이지 주소에 업종이 들어가지 않아 집계할 수 없습니다. 수치로 말씀드릴 수 없는 부분이라 밝혀 둡니다.</p>`,"blue"));
+    S.push(xpSec("매장 크기와 결제 건수는 어떻게 반영되나요?",
+      `<p>대수와 기종이 거기서 갈립니다. 하루 결제 건수가 많으면 처리 속도와 통신 안정성이 먼저이고, 적으면 기기값 부담을 줄이는 쪽으로 잡습니다.</p>`
+      + `<p>좌석 수, 카운터 위치, 주방까지의 동선을 알려 주시면 몇 대를 어디에 둘지까지 잡아 드립니다.</p>`,"amber"));
+    S.push(xpSec("지금 쓰는 기기를 바꿔야 할 때는 언제인가요?",
+      xpList(["결제 중에 멈추거나 먹통이 되는 일이 반복될 때","받고 싶은 간편결제를 못 받을 때","약정이 끝났는데 조건을 한 번도 다시 안 봤을 때","정산 주기나 입금일이 매장 사정과 안 맞을 때"],"🔄")
+      + `<p>하나만 해당한다고 바로 바꿀 일은 아닙니다. 두세 개가 겹치면 그때가 볼 때입니다.</p>`,"purple"));
+  }
+  if(slug==="cost"){
+    S.push(xpSec("설치 비용을 가르는 네 가지는 무엇인가요?",
+      `<p>같은 동네, 같은 제품이라도 아래가 다르면 금액이 달라집니다. 그래서 이 페이지에는 숫자를 적지 않습니다.</p>`
+      + xpList(["기기 대수와 기종(유선형·무선형)","설치 위치와 회선 상황","업종과 하루 결제 건수","약정 기간과 정산 주기"],"💰")
+      + `<p>이 네 가지가 정해지면 금액은 거의 자동으로 따라옵니다. 반대로 이게 안 정해진 상태에서 나온 숫자는 의미가 없습니다.</p>`,"amber"));
+    S.push(xpSec("기기 대수는 어떻게 정해지나요?",
+      `<p>결제가 일어나는 지점이 몇 곳인지로 셉니다. 카운터 하나면 한 대, 홀에서도 받으면 이동용이 하나 더 붙는 식입니다.</p>`
+      + `<p>좌석 수와 카운터 위치를 알려 주시면 몇 대가 필요한지 통화에서 바로 정리됩니다.</p>`,"blue"));
+    S.push(xpSec("수수료는 왜 매장마다 다른가요?",
+      `<p>결제망과 카드사마다 요율이 다르고, 어떤 결제가 얼마나 들어오느냐에 따라 실제 부담이 달라지기 때문입니다. "몇 퍼센트" 한 줄로 끝나지 않습니다.</p>`
+      + `<p>수수료만 낮고 입금이 늦거나 고장 대응이 없으면 결국 손해입니다. 수수료·입금 주기·사후관리를 합쳐서 보셔야 합니다.</p>`,"red"));
+    S.push(xpSec("약정과 해지 조건은 어디를 봐야 하나요?",
+      xpList(["약정 기간이 몇 개월인지","중도 해지 시 무는 돈이 있는지","기기값이 할부인지 임대인지","해지할 때 기기를 어떻게 반납하는지"],"📄")
+      + `<p>저희 조건은 <a href="/trust#policy">업체·기사 검증</a> 페이지에 적어 두었습니다. 해지 위약금은 받지 않습니다.</p>`,"purple"));
+    S.push(xpSec("왜 이 페이지에 금액을 적지 않나요?",
+      `<p>지역·업종·대수·회선 조합에 따라 실제 금액이 달라지는데, 대표 숫자 하나를 적어 두면 그 숫자가 기준처럼 읽힙니다. 통화에서 조건을 맞춰 보면 다른 금액이 나오고, 그러면 처음 본 숫자가 거짓말이 됩니다.</p>`
+      + `<p>그래서 이 사이트는 금액 대신 <b>금액을 정하는 기준</b>만 공개합니다. 위 항목을 정리해 주시면 통화에서 바로 계산해 드립니다.</p>`,"green"));
+  }
+  if(slug==="trust"){
+    S.push(xpSec("설치 기사는 어떤 절차로 배정되나요?",
+      `<p>세 단계를 거칩니다. 각 단계에서 무엇을 보는지 아래에 적었습니다.</p>`
+      + xpSteps([["1차 자격·경력 확인","결제 단말기 설치 자격과 실제 설치 경력을 확인합니다."],
+                 ["2차 설치 현장 점검","실제 설치 현장을 점검합니다. 배선 정리와 개통 상태를 봅니다."],
+                 ["3차 설치 후 확인 연락","설치가 끝나고 나서 매장에 연락해 문제가 없는지 확인합니다."]])
+      + `<p>3차 확인 연락까지 마쳐야 설치 건이 닫힙니다. 여기서 문제가 나오면 다시 방문합니다.</p>`,"blue"));
+    S.push(xpSec("1차에서는 무엇을 확인하나요?",
+      xpList(["결제 단말기 설치 자격 보유 여부","실제 설치해 본 기종과 건수","담당 가능한 지역과 일정","기존 설치 건에서 재방문이 있었는지"])
+      + `<p>경력이 짧다면 어떤 기종에서 짧은지까지 봅니다. 모두 갖춰야 하는 건 아니지만, 무엇이 있고 무엇이 없는지는 분명히 해 둡니다.</p>`,"green"));
+    S.push(xpSec("2차 설치 현장 점검은 어떻게 하나요?",
+      `<p>서류로는 설치 품질을 알 수 없어 현장을 봅니다.</p>`
+      + xpList(["배선이 정리돼 있고 손님 동선에 걸리지 않는지","개통과 시험 결제까지 마쳤는지","사장님께 사용법을 실제로 알려 드렸는지","영수증·정산 화면까지 확인시켜 드렸는지"],"🔍"),"purple"));
+    S.push(xpSec("3차 설치 후 확인 연락에서는 무엇을 묻나요?",
+      xpList(["설치 후 결제가 정상으로 도는지","사용법에서 막히는 부분이 없는지","약속한 조건과 실제가 같은지","추가로 필요한 게 생겼는지"],"📞")
+      + `<p>여기서 어긋나는 부분이 나오면 다시 방문하거나 조건을 고칩니다.</p>`,"amber"));
+    S.push(xpSec("기기는 정품인지 어떻게 확인하나요?",
+      `<p>설치할 때 기기와 사용법을 매장에서 직접 확인시켜 드립니다. 모델명과 일련번호를 설치 시점에 같이 확인하시면 됩니다.</p>`
+      + `<p>계약 조건은 말로만 하지 않고 서면으로 남깁니다. 나중에 "그런 말 없었다" 가 생기지 않게 하기 위해서입니다.</p>`,"blue"));
+    S.push(xpSec("A/S 와 해지는 어떻게 되나요?",
+      `<p>A/S 가능, 기기 교체 가능, 해지 위약금 없음입니다. 자세한 기준은 통화에서 안내드립니다.</p>`,"green"));
+  }
+  if(slug==="cases"){
+    S.push(xpSec("이 페이지의 사례는 실제 사례인가요?",
+      `<p><b>아닙니다.</b> 아래는 실제 매장의 기록이 아니라, 이런 상황으로 연락 주시면 이렇게 진행한다는 <b>구성 예시</b>입니다.</p>`
+      + `<p>매출이 얼마 늘었다는 식의 숫자는 적지 않았습니다. 확인할 방법이 없는 숫자를 적으면 그건 후기가 아니라 광고이기 때문입니다. 대신 상황·구성·진행 방식·한계를 적었고, 한계를 빼지 않았습니다.</p>`,"red"));
+    S.push(xpSec("업종별로 어떻게 구성하나요?", xpCaseCards(),"blue"));
+    S.push(xpSec("이 구성이 안 맞는 경우는 언제인가요?",
+      `<p>여섯 가지 모두 '매장에서 막히는 지점이 분명한 경우'를 전제로 합니다. 아래에 해당하면 구성 자체가 달라집니다.</p>`
+      + xpList(["약정이 많이 남아 있을 때","매장을 옮기거나 업종을 바꿀 계획일 때","회선·전기 조건이 아직 안 갖춰졌을 때","본사가 기기를 지정하는 프랜차이즈일 때"],"🚫")
+      + `<p>어느 쪽인지 판단이 서지 않으면 <a href="/fit">우리 매장 적합성</a>을 먼저 보세요.</p>`,"amber"));
+    S.push(xpSec("구성 예시와 실제는 얼마나 다른가요?",
+      `<p>업종이 같아 보여도 매장 구조와 동선이 달라서, 현장을 보고 나면 거의 항상 조정됩니다. 위 예시는 '대략 이런 순서로 간다'는 뼈대로만 봐 주세요.</p>`
+      + `<p>실제 구성은 통화와 현장 확인을 거쳐 정해집니다. 무엇을 알려 주시면 되는지는 <a href="/prepare">전화 전 준비</a>에 적어 두었습니다.</p>`,"green"));
+  }
+  if(slug==="faq"){
+    S.push(xpSec("전화하면 무엇부터 물어보나요?",
+      `<p>업종과 매장 위치, 그리고 지금 쓰시는 기기가 있는지를 먼저 여쭙습니다. 이 세 가지면 큰 방향은 잡힙니다.</p>`
+      + `<p>무엇을 알려 주시면 되는지는 <a href="/prepare">전화 전 준비</a>에, 금액이 어떻게 정해지는지는 <a href="/cost">비용 결정 요인</a>에 적어 두었습니다.</p>`,"blue"));
+    S.push(xpSec("사업자등록 전에도 상담되나요?",
+      `<p>상담은 됩니다. 어떤 기기가 맞을지, 무엇을 준비하시면 될지까지 안내드립니다. 다만 실제 개통은 사업자등록이 나온 뒤에 진행됩니다.</p>`
+      + `<p>개업 일정이 정해져 있다면 미리 말씀해 주시면 일정을 맞춰 잡습니다.</p>`,"green"));
+    S.push(xpSec("설치까지 며칠 걸리나요?",
+      `<p>매장 위치, 기종 재고, 회선 상황에 따라 달라집니다. 통화에서 조건을 확인한 뒤 실제 가능한 날짜를 말씀드립니다.</p>`
+      + `<p class="fpnote">평균 소요 일수는 따로 기록하지 않아 수치로 말씀드릴 수 없습니다. "며칠 안에" 라고 적어 두고 못 지키는 것보다 낫다고 봅니다.</p>`,"amber"));
+    S.push(xpSec("기존 약정이 남아 있으면 어떻게 되나요?",
+      `<p>먼저 남은 기간과 해지 조건을 확인하시는 게 순서입니다. 위약금이 남은 상태에서 옮기면 그 돈이 그대로 손해입니다.</p>`
+      + `<p>확인 방법을 모르시면 통화에서 같이 짚어 드립니다. 확인해 보고 "지금은 그대로 두시는 게 낫다" 로 끝나는 경우도 있습니다.</p>`,"red"));
+    S.push(xpSec("설치 후 사용법은 누가 알려주나요?",
+      `<p>설치 기사가 현장에서 직접 알려 드립니다. 결제부터 영수증, 마감 정산 화면까지 한 번 같이 돌려 봅니다.</p>`
+      + `<p>나중에 막히는 부분이 생기면 전화로 다시 안내드립니다. A/S와 해지 조건은 <a href="/trust#policy">업체·기사 검증</a>에 적어 두었습니다.</p>`,"purple"));
+    S.push(xpSec("어떤 검색으로 이 사이트에 들어오시나요?",
+      `<p>통화에서 오간 이야기는 이 사이트에 따로 모으지 않아 집계할 수 없습니다. 대신 검색을 거쳐 들어온 경우의 검색어는 남아 있어 그대로 적습니다.</p>`
+      + xpTable(XP_STAT.kw.map(x=>[x[0], x[1]+"건"]),["검색어","건수"]) + xpNote()
+      + `<p class="fpnote">건수가 적습니다. 경향으로 읽기에는 모자란 수치라는 점을 밝혀 둡니다.</p>`,"blue"));
+  }
+  if(slug==="prepare"){
+    S.push(xpSec("전화 전에 무엇을 확인해 두면 되나요?",
+      `<p>아래 중 아는 것만 알려 주시면 됩니다. 전부 있어야 하는 건 아닙니다.</p>`
+      + xpList(["업종과 매장 위치","매장 규모와 좌석 수","지금 쓰는 단말기가 있는지","하루 평균 결제 건수","필요한 결제 수단","희망하는 설치 시기"],"📝")
+      + `<p>앞의 세 가지는 '지금 상태'를, 뒤의 세 가지는 '무엇이 필요한지'를 정하는 데 씁니다.</p>`,"green"));
+    S.push(xpSec("매장 도면이 필요한가요?",
+      `<p>필요하지 않습니다. 카운터가 어디 있고 좌석이 몇 개인지 말로 알려 주시면 됩니다. 키오스크나 자동판매기처럼 자리를 차지하는 기기는 설치 전에 현장을 보고 정합니다.</p>`,"blue"));
+    S.push(xpSec("서류는 무엇이 필요한가요?",
+      `<p>개통 단계에서 사업자등록증과 통장 사본이 필요합니다. 상담 단계에서는 없어도 됩니다.</p>`
+      + `<p>사업자등록 전이라면 예정 일정만 알려 주시면 그에 맞춰 준비합니다.</p>`,"amber"));
+    S.push(xpSec("통화는 얼마나 걸리나요?",
+      `<p>정해 둔 시간은 없습니다. 위 항목이 정리돼 있으면 짧아지고, 없으면 매장 상황을 여쭙느라 길어집니다.</p>`
+      + `<p class="fpnote">평균 통화 시간은 따로 기록하지 않아 수치로 말씀드릴 수 없습니다.</p>`,"purple"));
+    S.push(xpSec("통화 후에는 무엇이 정해지나요?",
+      xpList(["어떤 기기를 몇 대 놓을지","설치 날짜와 시간","조건에 맞춘 금액과 수수료","약정과 해지 조건","설치 당일에 준비할 것"],"✅")
+      + `<p>금액은 이 단계에서 나옵니다. 어떤 항목이 금액을 가르는지는 <a href="/cost">비용 결정 요인</a>에 미리 적어 두었습니다.</p>`,"red"));
+  }
+  return S.join("");
+}
+
+const XP_META = {
+  compare:{t:"카드단말기·포스기·키오스크, 뭐가 다른가요?",
+    d:"카드단말기와 포스기, 키오스크, 테이블오더가 무엇이 다른지 비교했습니다. 어떤 매장에 무엇이 맞는지, 여러 대를 같이 쓸 때 역할을 어떻게 나누는지 정리했습니다."},
+  fit:{t:"우리 매장에는 어떤 게 맞나요?",
+    d:"지금 설치가 필요한 매장 상황과, 반대로 설치를 권하지 않는 경우를 대안과 함께 적었습니다. 매장 크기와 결제 건수가 기종 선택에 어떻게 반영되는지 확인하세요."},
+  cost:{t:"설치 비용은 무엇으로 갈리나요?",
+    d:"설치 비용을 가르는 네 가지 조건과 수수료가 매장마다 다른 이유, 약정과 해지에서 확인할 항목을 정리했습니다. 조건에 따라 달라져 이 페이지에는 금액을 적지 않습니다."},
+  trust:{t:"설치 기사와 기기는 어떻게 검증하나요?",
+    d:"1차 자격·경력 확인, 2차 설치 현장 점검, 3차 설치 후 확인 연락까지 기사 배정 3단계에서 무엇을 보는지 적었습니다. A/S와 해지 조건도 함께 안내합니다."},
+  cases:{t:"다른 매장은 어떻게 구성하나요?",
+    d:"업종별 구성 예시 여섯 가지입니다. 실제 사례가 아니라 상황·구성·진행 방식·한계를 적은 구성 예시이며, 매출 수치는 넣지 않았습니다."},
+  faq:{t:"상담에서 가장 많이 나온 질문",
+    d:"사업자등록 전 상담, 설치 소요 일수, 기존 약정이 남은 경우, 설치 후 사용법 안내까지 통화에서 자주 나오는 질문을 모았습니다."},
+  prepare:{t:"전화 전에 무엇을 확인해 두면 되나요?",
+    d:"전화 전에 확인해 두면 좋은 여섯 가지와 개통에 필요한 서류를 적었습니다. 통화가 끝나면 무엇이 정해지는지도 함께 확인하세요."}
+};
+
+function pageFixed24(slug){
+  const m = XP_META[slug]; if(!m) return null;
+  const secs = xpBody(slug);
+  const seed = hash("fixed|"+slug);
+  const pub = feedDate(seed), mod = new Date(Math.min(Date.now(), pub.getTime()+ (seed%40+10)*86400000));
+  const kd = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`;
+  const iso = d => d.toISOString().slice(0,10);
+  const canonical = SITE+"/"+slug;
+  const bc = [["홈","/"],[m.t,null]];
+  const bcHtml = `<nav class="bc">${bc.map((b,i)=>(b[1]?`<a href="${b[1]}">${esc(b[0])}</a>`:`<span>${esc(b[0])}</span>`)+(i<bc.length-1?'<span class="sep">›</span>':"")).join("")}</nav>`;
+  const qs = [...secs.matchAll(/<h2 class="sh [^"]*"><span>([\s\S]*?)<\/span><\/h2>/g)].map(x=>x[1]);
+  const toc = `<div class="fptoc"><b>이 페이지에서 무엇을 확인할 수 있나요?</b><ul>${qs.map(h=>`<li>${h}</li>`).join("")}</ul></div>`;
+  const jsonld = JSON.stringify({"@context":"https://schema.org","@graph":[
+    {"@type":"Article","headline":m.t,"description":m.d,"datePublished":iso(pub),"dateModified":iso(mod),
+     "author":{"@type":"Organization","name":AUTHOR24},"publisher":{"@type":"Organization","name":BRAND},
+     "mainEntityOfPage":canonical,"image":`${SITE}/thumb/card/seoul.svg`},
+    {"@type":"BreadcrumbList","itemListElement":bc.map((b,i)=>({"@type":"ListItem","position":i+1,"name":b[0],...(b[1]?{"item":SITE+b[1]}:{})}))}
+  ]});
+  const body = `${bcHtml}<h1 class="fph1">${esc(m.t)}</h1>`
+    + `<div class="dates">📅 발행 <b>${kd(pub)}</b>&nbsp; · &nbsp;✏️ 수정 <b>${kd(mod)}</b>&nbsp; · &nbsp;✍️ 작성 <b>${AUTHOR24}</b></div>`
+    + `<p class="lead">${esc(m.d)}</p>${toc}${secs}${xpNav(slug)}`
+    + `<a class="cta" href="tel:${TELRAW}">📞 준비되셨으면 전화 <span class="ar">▶</span></a>`
+    + `<a class="cta" href="sms:${TELRAW}" style="background:var(--blue);margin-top:8px">💬 문자 상담 <span class="ar">▶</span></a>`
+    + footer("","");
+  return shell({title:`${m.t} | ${BRAND}`, desc:m.d, canonical, ogimg:`${SITE}/thumb/card/seoul.svg`, jsonld, body, published:iso(pub), modified:iso(mod)});
+}
+
 /* 라우팅 본체. export default.fetch 는 이 결과에 크롤러 기록만 덧붙인다.
    경로마다 흩어진 return 을 전부 고치지 않고 한 곳에서 감싸기 위해 분리했다. */
 async function handleFetch(request, env, ctx){
@@ -3084,6 +3357,8 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
       const html=productPage(PATH2TYPE.get(seg[0]),seg[1]);
       if(html) return new Response(html,{headers:H_HTML});
     }
+    /* 고정 안내 7개. 제품·지역 경로가 아닌 한 세그먼트 주소를 여기서 잡는다 */
+    if(seg.length===1 && XP_META[seg[0]]){ const h=pageFixed24(seg[0]); if(h) return new Response(h,{headers:H_HTML}); }
     /* 한글 주소로 들어오면 같은 페이지의 영문 주소로 영구 이동시킨다 */
     const ko=koPath(seg);
     if(ko) return Response.redirect(SITE+ko+url.search,301);
