@@ -599,6 +599,9 @@ if (wanted("크롤러기록") && worker) {
     ["Mozilla/5.0 (compatible; Daum/4.1; +http://cs.daum.net/faq/15/4118.html)", "Daum"],
     ["Mozilla/5.0 (compatible; Daumoa/4.1)", "Daum"],
     ["Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)", "YandexBot"],
+    ["Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)", "ClaudeBot"],
+    ["Mozilla/5.0 (compatible; Claude-SearchBot/1.0; +https://www.anthropic.com/claude-searchbot)", "Claude-SearchBot"],
+    ["Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)", "Claude-User"],
     ["Scrapy/2.11 (+https://scrapy.org)", "기타봇"],
   ];
   for (const [ua, wantBot] of CASES) {

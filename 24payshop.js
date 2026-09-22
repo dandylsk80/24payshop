@@ -224,6 +224,8 @@ const CRAWLER_BOTS = [
   [/bytespider/i,                            "Bytespider"],
   [/applebot/i,                              "Applebot"],
   [/gptbot|oai-searchbot|chatgpt-user/i,     "OpenAI"],
+  [/claude-searchbot/i,                      "Claude-SearchBot"],
+  [/claude-user/i,                           "Claude-User"],
   [/claudebot|claude-web|anthropic/i,        "ClaudeBot"],
   [/perplexity/i,                            "PerplexityBot"],
   [/facebookexternalhit|meta-external/i,     "Facebook"],
