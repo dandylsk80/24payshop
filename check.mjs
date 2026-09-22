@@ -106,6 +106,16 @@ const PRODS = {
 const PATHS = Object.keys(PRODS);
 const PROD_RE = new RegExp(`^/(${PATHS.join("|")})/[^/]+$`);
 const prodOf = p => PRODS[p.split("/")[1]];
+const reEsc = x => String(x).replace(/[.*+?^${}()|[\]\\]/g, m => "\\" + m);
+/* 제목 핵심어 검사용 지역명({R}).
+   워커가 푸터에 "＝＝＝ 24PAYSHOP · {시도 구군} {동} ＝＝＝" 를 찍으므로 거기서 마지막
+   토큰을 가져온다. 못 뽑으면 절대 안 맞는 토큰을 줘서 조용히 통과하지 않게 한다. */
+const regionOfHtml = h => {
+  const m = h.match(/24PAYSHOP · ([^＝<]+?)\s*＝/);
+  if (!m) return "\u0000";
+  const t = m[1].trim().split(/\s+/);
+  return t[t.length - 1] || "\u0000";
+};
 
 /* ── 표본 수집: 사이트맵에서 실제 URL 을 가져온다 ───────────── */
 let SM = "", urls = [], regionPaths = [];
@@ -243,12 +253,26 @@ if (wanted("콘텐츠") && pages.length) {
     const heads = (html.match(/class="sh (?:green|blue|amber|purple|red)"/g) || []).length;
     if (heads < D.secs + 3) secBad.push(`${p} 섹션 ${heads}개 (${D.secs + 3}개 필요)`);   /* +process +check +faq */
 
-    /* 시그니처 h2 섹션: h2 하나 + 본문 길이 */
-    const h2 = [...html.matchAll(/<h2 class="sh[^"]*"><span>([\s\S]*?)<\/span><\/h2>/g)].map(m => text(m[1]));
-    const tb = html.match(/<h2 class="sh[^"]*">[\s\S]*?<\/h2>((?:<p>[\s\S]*?<\/p>)+)/);
-    const tlen = tb ? text(tb[1]).length : 0;
-    if (h2.length !== 1 || !h2[0].includes(D.h2) || tlen < D.h2len[0] || tlen > D.h2len[1])
-      tossBad.push(`${p} h2 ${h2.length}개 "${h2[0] || ""}" · 본문 ${tlen}자`);
+    /* 섹션 제목은 전부 h2 다(8단계). 개수·질문형·핵심어를 같이 본다.
+       시그니처 섹션은 그중 D.h2 낱말이 든 하나이며 본문 길이 범위가 따로 있다. */
+    const blocks = html.split(/(?=<h2 class="sh)/).filter(x => x.startsWith('<h2 class="sh'));
+    const h2 = blocks.map(b => { const m = b.match(/^<h2 class="sh[^"]*"><span>([\s\S]*?)<\/span><\/h2>/); return m ? text(m[1]) : ""; });
+    if (h2.length !== D.secs + 3)
+      tossBad.push(`${p} h2 ${h2.length}개 (${D.secs + 3}개 필요)`);
+    const notQ = h2.filter(x => !/[?？]/.test(x));
+    if (notQ.length) tossBad.push(`${p} 비질문형 제목 ${notQ.length}개 "${notQ[0]}"`);
+    const RG = regionOfHtml(html);
+    const noKw = h2.filter(x => !new RegExp(`${reEsc(D.name)}|${reEsc(RG)}`).test(x));
+    if (noKw.length) tossBad.push(`${p} 핵심어 없는 제목 ${noKw.length}개 "${noKw[0]}"`);
+    const sigIdx = h2.findIndex(x => x.includes(D.h2));
+    let tlen = 0;
+    if (sigIdx >= 0) {
+      const after = blocks[sigIdx].replace(/^<h2[\s\S]*?<\/h2>/, "");
+      const pm = after.match(/^((?:<p>[\s\S]*?<\/p>)+)/);
+      tlen = pm ? text(pm[1]).length : 0;
+    }
+    if (sigIdx < 0 || tlen < D.h2len[0] || tlen > D.h2len[1])
+      tossBad.push(`${p} 시그니처 "${D.h2}" ${sigIdx < 0 ? "없음" : "본문 " + tlen + "자"}`);
 
     const qs = [...html.matchAll(/<div class="q">[\s\S]*?<\/div>/g)].map(m => text(m[0]));
     if (qs.length < D.faqMin) faqBad.push(`${p} FAQ ${qs.length}개 (${D.faqMin}개 필요)`);
