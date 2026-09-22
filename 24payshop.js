@@ -863,6 +863,69 @@ function spin(t,key){
     for(let g=0;g<SYN_TOKEN.length;g++){const grp=SYN_TOKEN[g];if(grp.indexOf(core)>=0){const ch=grp[hash(key+"st"+g)%grp.length];return lead+ch+trail;}}
     return tok;}).join(" ");
 }
+/* ── 지역 페이지 공통 블록 3개 ───────────────────────────────
+   맞는 경우 / 안 맞는 경우(대안) / 비용 4변수.
+   절차 3단계와 상담 전 준비물은 원래 있던 process·check 섹션이 그 역할을 한다.
+   안내 문단까지 전부 풀로 둔다. 고정 문구로 두면 체크리스트를 아무리 섞어도
+   전 페이지가 같은 문단을 공유해 유사도가 올라간다(myclassup 에서 실측). */
+const PB_FIT = [
+ "현금만 받다가 손님을 돌려보낸 적이 있을 때","피크 시간에 계산대 앞이 막힐 때",
+ "마감 정산에 매번 시간이 걸릴 때","주문을 받다가 놓치는 일이 반복될 때",
+ "지금 쓰는 기기가 자주 멈출 때","간편결제를 못 받아 되묻게 될 때",
+ "새로 문을 열어 처음부터 갖춰야 할 때","약정이 끝나 조건을 다시 볼 때",
+ "매출을 손으로 적고 있을 때","직원이 바뀔 때마다 사용법을 다시 가르쳐야 할 때",
+ "배달·예약까지 따로 관리하고 있을 때","세금계산서와 정산을 매번 찾아 맞출 때"];
+const PB_UNFIT = [
+ ["계약 약정이 많이 남았을 때","남은 기간부터 확인하는 게 먼저입니다"],
+ ["곧 매장을 옮길 계획일 때","옮긴 뒤에 설치하는 편이 낫습니다"],
+ ["지금 기기가 멀쩡하게 도는 중일 때","그대로 쓰셔도 됩니다"],
+ ["하루 결제 건수가 아주 적을 때","지금 방식으로 충분합니다"],
+ ["사업자등록이 아직 안 났을 때","등록 뒤에 진행하는 게 빠릅니다"],
+ ["계절 장사로 몇 달만 열 때","단기 대여 쪽을 알아보세요"],
+ ["인터넷·전화 회선이 아직 없을 때","회선부터 넣어야 합니다"],
+ ["자리 조건이 안 맞을 때","전기와 공간부터 확인하세요"],
+ ["결제보다 메뉴 정리가 먼저일 때","운영부터 정리하는 게 순서입니다"],
+ ["본사가 기기를 지정하는 프랜차이즈일 때","본사 정책을 먼저 확인하세요"],
+ ["폐업이나 업종 변경을 고민 중일 때","방향을 정한 뒤가 낫습니다"],
+ ["지금 조건이 이미 나쁘지 않을 때","비교만 해 보셔도 됩니다"]];
+const PB_COST = [
+ "기기 대수","유선형인지 무선형인지","설치 위치와 회선 상황","결제 수단 범위",
+ "업종과 하루 결제 건수","기존 기기 철거·이전 여부","약정 기간","정산 주기",
+ "배달앱·예약 연동 여부","프린터·스캐너 같은 부가 장비","설치 희망 일정","사후관리 범위"];
+const PB_P_FIT = [
+ "{LOC}에서 아래와 같은 상황이라면 {P} 설치를 생각해 볼 때입니다.",
+ "이런 일이 반복되면 {R} 매장에 {P}를 놓을 때가 된 겁니다.",
+ "{R} 사장님들이 전화 주실 때 가장 많이 꺼내시는 상황을 모았습니다.",
+ "아래 중 하나라도 해당되면 {P} 상담을 받아 보셔도 좋습니다.",
+ "{LOC}에서 {P}를 놓은 매장은 대체로 이런 상태였습니다.",
+ "다음과 같다면 버티는 것보다 바꾸는 쪽이 빠릅니다."];
+const PB_P_UNFIT = [
+ "반대로 아래와 같다면 지금은 설치할 때가 아닙니다. 대안을 같이 적습니다.",
+ "이런 경우에는 {P}보다 다른 선택이 먼저입니다.",
+ "아래에 해당하면 {R} 매장에 설치를 권하지 않습니다.",
+ "모든 매장에 {P}가 답은 아닙니다. 이럴 땐 다른 쪽이 낫습니다.",
+ "돈을 덜 쓰고 되는 방법이 있으면 그쪽이 먼저입니다.",
+ "다음 경우라면 {LOC}에서도 조금 미루시는 편이 낫습니다."];
+const PB_P_COST = [
+ "{R} {P} 비용은 아래 항목이 어떻게 정해지느냐에 따라 달라집니다. 같은 동네라도 조건이 다르면 금액이 달라져 여기에 숫자를 적지 않습니다.",
+ "{LOC}에서 {P} 금액을 가르는 건 아래 네 가지입니다. 매장마다 달라 이 페이지에는 금액을 쓰지 않습니다.",
+ "{P} 비용은 한 줄로 답하기 어렵습니다. 아래 항목이 어떻게 잡히느냐에 따라 달라집니다.",
+ "아래 조건이 정해져야 {R} {P} 비용이 나옵니다. 그래서 여기에 숫자를 걸어 두지 않습니다.",
+ "{LOC}에서 금액 차이는 아래에서 생깁니다. 조건 없이 적은 숫자는 의미가 없습니다.",
+ "{P} 비용을 물으시면 먼저 아래를 여쭤봅니다. 이게 정해져야 계산이 됩니다."];
+const PB_P_COST2 = [
+ "정확한 금액은 통화에서 조건을 확인한 뒤 알려드립니다.",
+ "조건을 듣고 나면 바로 말씀드립니다.",
+ "위 항목만 정리해 주시면 통화에서 바로 계산됩니다.",
+ "{R} 매장 상황을 맞춰 본 뒤 금액을 알려드립니다.",
+ "같은 조건이면 같은 금액입니다. 통화로 확인해 주세요.",
+ "숫자는 통화에서, 기준은 여기에 적어 둡니다."];
+/* 새 블록 3개의 제목. 기존 HEAD 와 같은 아이콘|색|문구 형식 */
+const HEAD_PB={
+ fit:["✅|green|{R} 매장에 {P}가 맞는 경우는 언제인가요?","✅|green|어떤 {R} 매장이 {P}를 놓나요?","✅|green|{P}, 지금 놓을 때인지 어떻게 아나요?","✅|green|{LOC}에서 {P}가 필요한 신호는 뭔가요?","✅|green|이런 {R} 매장이라면 {P}를 봐야 하나요?","✅|green|{P} 설치를 생각할 때는 언제인가요?"],
+ unfit:["🚫|red|{P} 대신 다른 방법이 나은 경우는 언제인가요?","🚫|red|{R}에서 {P}를 권하지 않는 경우도 있나요?","🚫|red|지금 {P}를 놓지 않는 게 나을 때는 언제인가요?","🚫|red|{LOC} 매장인데 {P}가 안 맞을 수도 있나요?","🚫|red|{P} 설치를 미루는 편이 나은 때가 있나요?","🚫|red|{R} 매장에 {P}가 답이 아닌 경우는 뭔가요?"],
+ costvar:["💰|amber|{R} {P} 비용은 무엇으로 갈리나요?","💰|amber|{P} 금액을 정하는 건 뭔가요?","💰|amber|{LOC}에서 {P} 비용은 어떻게 계산되나요?","💰|amber|같은 {P}인데 왜 매장마다 금액이 다른가요?","💰|amber|{R} {P} 견적은 무엇을 보고 나오나요?","💰|amber|{P} 비용에서 먼저 정해야 할 건 뭔가요?"]
+};
 const HEAD={
  why:["💡|amber|{R} 매장에 왜 {P}가 필요할까요?","💡|amber|{P}, {R}에서 정말 필요한가요?","🤔|amber|{R} 매장이 {P}를 두는 이유는 뭔가요?","💡|amber|결제를 {P}부터 챙기는 이유가 뭔가요?","💡|amber|{P} 하나가 {R} 매출을 바꾸나요?","🤔|amber|{P} 없이 {R}에서 장사하면 뭐가 아쉬운가요?"],
  area:["📍|blue|{R} 상권에서는 {P}를 어떻게 쓰나요?","📍|blue|{R}은 어떤 결제 환경인가요?","🗺️|blue|{R} 매장은 손님이 어떻게 결제하나요?","📍|blue|{R}에서 {P}를 고를 때 동네 사정이 영향을 주나요?","🗺️|blue|{R} 상권에 맞는 {P}는 뭔가요?","📍|blue|{R}, 결제는 어떤 식으로 돌아가나요?"],
@@ -2178,7 +2241,7 @@ function productPage(type,slug,ov){
 
   const chips=K.chips?pickN(K.chips.pool,K.chips.n,key,"chips"):[];
   const chipHtml=chips.length?`<div class="chips">${chips.map(c=>`<span>${c}</span>`).join("")}</div>`:"";
-  const HD=sk=>{const a=K.head[sk];const c=a[hash(key+"h_"+sk)%a.length].split("|");return [c[0],c[1],c[2]];};
+  const HD=sk=>{const a=K.head[sk]||HEAD_PB[sk];   /* 공통 블록 3개는 팩에 없다 */const c=a[hash(key+"h_"+sk)%a.length].split("|");return [c[0],c[1],c[2]];};
   const HX=(sk,tag)=>{const c=HD(sk);return `<${tag} class="sh ${c[1]}"><span>${fill(c[0])} ${esc(fill(c[2]))}</span></${tag}>`;};
   const sec={};
   for(const [id,pool,salt] of K.secs){
@@ -2219,6 +2282,19 @@ ${bcHtml}
 
 ${midBody}
 
+${HX("fit","h2")}
+<p>${esc(fill(pick(PB_P_FIT,key,"pbf")))}</p>
+<div class="check">${pickN(PB_FIT,3,key,"pbfit").map(it=>`<div class="ci">✅ ${esc(fill(it))}</div>`).join("")}</div>
+
+${HX("unfit","h2")}
+<p>${esc(fill(pick(PB_P_UNFIT,key,"pbu")))}</p>
+<div class="check">${pickN(PB_UNFIT,3,key,"pbunfit").map(it=>`<div class="ci">🚫 ${esc(fill(it[0]))} — ${esc(fill(it[1]))}</div>`).join("")}</div>
+
+${HX("costvar","h2")}
+<p>${esc(fill(pick(PB_P_COST,key,"pbc")))}</p>
+<div class="check">${pickN(PB_COST,4,key,"pbcost").map(it=>`<div class="ci">💰 ${esc(fill(it))}</div>`).join("")}</div>
+<p>${esc(fill(pick(PB_P_COST2,key,"pbc2")))}</p>
+
 ${HX("process","h2")}
 <p>${esc(fill(pick(K.procIntro,key,"proc")))}</p>
 <div class="steps">
@@ -2229,14 +2305,14 @@ ${HX("process","h2")}
   <div class="step s3"><div class="c">3</div><div><h4>${pick(K.stitle.s3,key,"t3")}</h4><p>${sub(K.step[2],"st3")}</p></div></div>
 </div>
 
-${HX("check","h2")}
-<p>${esc(fill(pick(K.checkIntro,key,"chk")))}</p>
-<div class="check">${chk.map(it=>`<div class="ci">${it}</div>`).join("")}</div>
-
 ${HX("faq","h2")}
 <div class="faq">${faqs.map(([q,a])=>`<div class="q"><span class="qm">Q.</span>${esc(q)}</div><div class="a"><span class="am">A.</span>${esc(a)}</div>`).join("")}</div>
 
 <div class="note" style="background:var(--amber-t);border:1.5px dashed #f0d9a8;border-radius:12px;padding:13px;font-size:13px;color:#7a5a18;margin:14px 0">${esc(fill(pick(K.note,key,"note")))}</div>
+
+${HX("check","h2")}
+<p>${esc(fill(pick(K.checkIntro,key,"chk")))}</p>
+<div class="check">${chk.map(it=>`<div class="ci">${it}</div>`).join("")}</div>
 
 <p style="margin-top:18px;font-weight:600">${esc(fill(closes[0]))}</p><p>${esc(fill(closes[1]))}</p>
 <a class="cta" href="tel:${TELRAW}">${esc(fill(pick(K.cta,key,"cta")))} <span class="ar">▶</span></a>

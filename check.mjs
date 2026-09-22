@@ -251,14 +251,15 @@ if (wanted("콘텐츠") && pages.length) {
     if (len < 2500) thin.push(`${p} ${len}자`);
 
     const heads = (html.match(/class="sh (?:green|blue|amber|purple|red)"/g) || []).length;
-    if (heads < D.secs + 3) secBad.push(`${p} 섹션 ${heads}개 (${D.secs + 3}개 필요)`);   /* +process +check +faq */
+    if (heads < D.secs + 6) secBad.push(`${p} 섹션 ${heads}개 (${D.secs + 6}개 필요)`);   /* +fit +unfit +costvar +process +faq +check */
 
     /* 섹션 제목은 전부 h2 다(8단계). 개수·질문형·핵심어를 같이 본다.
        시그니처 섹션은 그중 D.h2 낱말이 든 하나이며 본문 길이 범위가 따로 있다. */
     const blocks = html.split(/(?=<h2 class="sh)/).filter(x => x.startsWith('<h2 class="sh'));
     const h2 = blocks.map(b => { const m = b.match(/^<h2 class="sh[^"]*"><span>([\s\S]*?)<\/span><\/h2>/); return m ? text(m[1]) : ""; });
-    if (h2.length !== D.secs + 3)
-      tossBad.push(`${p} h2 ${h2.length}개 (${D.secs + 3}개 필요)`);
+    /* 고정 섹션 6개: fit · unfit · costvar · process · faq · check (9단계) */
+    if (h2.length !== D.secs + 6)
+      tossBad.push(`${p} h2 ${h2.length}개 (${D.secs + 6}개 필요)`);
     const notQ = h2.filter(x => !/[?？]/.test(x));
     if (notQ.length) tossBad.push(`${p} 비질문형 제목 ${notQ.length}개 "${notQ[0]}"`);
     const RG = regionOfHtml(html);
