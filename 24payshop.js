@@ -297,11 +297,11 @@ const HOME_HTML = `<!DOCTYPE html>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>24페이샵 · 카드단말기 설치</title>
+<title>카드단말기 설치 — 무료 설치·빠른 설치·전 업종 | 24페이샵</title>
 <meta name="description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
 <link rel="canonical" href="https://24payshop.com/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="24페이샵 · 카드단말기 설치">
+<meta property="og:title" content="카드단말기 설치 — 무료 설치·빠른 설치·전 업종 | 24페이샵">
 <meta property="og:description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
 <meta property="og:url" content="https://24payshop.com/">
 <meta property="og:image" content="https://24payshop.com/og.svg">
