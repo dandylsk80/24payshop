@@ -3005,11 +3005,15 @@ async function indexnowDaily(env, source, dry, force){
   const res = [];
   if (fresh.length) res.push(await inSubmit(env, fresh, source, "posts"));
   const next = Object.assign({}, prev || {}), today = new Date().toISOString().slice(0, 10);
-  for (const t of changed) {
-    const r = await inSubmit(env, IN_TYPES[t].urls(), source, "type=" + t);
-    res.push(r);
-    if (r.ok) { if (!prev || prev[t] !== fp[t]) dates[t] = today; next[t] = fp[t]; }
+  /* URL 이 적은 유형(100개 이하)은 한 묶음으로 합쳐 보낸다 — 루트 URL 하나만 담긴 배치는 네이버가 422 를 준다(2026-10-13 실측). 홈만 남으면 목록 URL 을 짝으로 붙인다 */
+  const small = changed.filter(t => IN_TYPES[t].urls().length <= 100), big = changed.filter(t => IN_TYPES[t].urls().length > 100);
+  const mark = (ts, ok) => { if (!ok) return; for (const t of ts) { if (!prev || prev[t] !== fp[t]) dates[t] = today; next[t] = fp[t]; } };
+  if (small.length) {
+    let urls = []; for (const t of small) urls = urls.concat(IN_TYPES[t].urls());
+    if (urls.length === 1 && /^https?:\/\/[^/]+\/?$/.test(urls[0])) urls.push(IN_TYPES.list.urls()[0]);
+    const r = await inSubmit(env, urls, source, "types=" + small.join(",")); res.push(r); mark(small, r.ok);
   }
+  for (const t of big) { const r = await inSubmit(env, IN_TYPES[t].urls(), source, "type=" + t); res.push(r); mark([t], r.ok); }
   if (!fresh.length && !changed.length) await logIndexnow(env, { source, start: 0, count: 0, status: 0, ep: "", note: "no-change" });
   if (changed.length && env && env.DB) {
     try {
