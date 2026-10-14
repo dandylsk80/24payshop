@@ -1,5 +1,7 @@
 name = "24payshop"
 main = "24payshop.js"
+# 단일 파일 워커. deploy --no-bundle 이 저장소의 data/guides.json 등을 추가 모듈로 붙이지 않도록 끈다.
+find_additional_modules = false
 compatibility_date = "2026-06-01"
 routes = [
   { pattern = "24payshop.com", custom_domain = true },
