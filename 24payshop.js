@@ -318,6 +318,9 @@ const HOME_HTML = `<!DOCTYPE html>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
+/* PC(769px~)는 전화를 걸 수 없으니 tel: 버튼을 숨기고 번호를 일반 텍스트로 보인다. 모바일은 그대로 */
+.telt{display:none}
+@media(min-width:769px){a[href^="tel:"]{display:none!important}.telt{display:inline-flex;align-items:center}.telt.cbt{padding:12px 16px;border-radius:999px;background:var(--green,#16a34a);color:#fff;font-weight:800;font-size:15px;box-shadow:0 8px 20px -6px rgba(0,0,0,.45);white-space:nowrap}.telt.ctat{justify-content:center;width:100%;margin-top:14px;font-weight:800;font-size:18px}}
   :root{
     --paper:#F7F3E8; --ink:#231D16; --dim:#7a746a; --bar:74px;
     --red:#F5565B; --red-t:#FFECEC;
@@ -615,13 +618,13 @@ const HOME_HTML = `<!DOCTYPE html>
   <footer class="foot">
     <div class="fbrand">24<span class="pay">pay</span>shop</div>
     <div>카드단말기 · 포스기 설치 전문</div>
-    <div>대표전화 <a href="tel:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 문자 <a href="sms:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
+    <div>대표전화 <a href="tel:01098768282">010-9876-8282</a><span class="telt">010-9876-8282</span> &nbsp;|&nbsp; 문자 <a href="sms:01098768282">010-9876-8282</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
     <div><a href="/post/">단말기 정보</a> &nbsp;|&nbsp; <a href="/regions">전체 지역</a> &nbsp;|&nbsp; <a href="/list">전체 목록</a></div>
     <div class="fcopy">© 2026 24PAYSHOP</div>
   </footer>
 </div>
 
-<div class="callbar cbrow"><a href="tel:01098768282" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><a href="sms:01098768282" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div>
+<div class="callbar cbrow"><a href="tel:01098768282" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><span class="telt cbt">📞 010-9876-8282</span><a href="sms:01098768282" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script>
 <script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script>
 </body>
@@ -2082,6 +2085,9 @@ PACK.vending={
 
 /* ===== CSS ===== */
 const CSS=`
+/* PC(769px~)는 전화를 걸 수 없으니 tel: 버튼을 숨기고 번호를 일반 텍스트로 보인다. 모바일은 그대로 */
+.telt{display:none}
+@media(min-width:769px){a[href^="tel:"]{display:none!important}.telt{display:inline-flex;align-items:center}.telt.cbt{padding:12px 16px;border-radius:999px;background:var(--green,#16a34a);color:#fff;font-weight:800;font-size:15px;box-shadow:0 8px 20px -6px rgba(0,0,0,.45);white-space:nowrap}.telt.ctat{justify-content:center;width:100%;margin-top:14px;font-weight:800;font-size:18px}}
 .fph1{font-size:24px;font-weight:900;line-height:1.35;margin:14px 0 10px;word-break:keep-all}
 .fptoc{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
 .fptoc b{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
@@ -2197,7 +2203,7 @@ ${published?`<meta property="article:published_time" content="${published}"><met
 <style>${CSS}</style>
 ${jsonld?`<script type="application/ld+json">${jsonld}</script>`:""}
 </head><body><div class="wrap">${body}</div>
-<div class="callbar"><div class="in cbrow"><a href="tel:${TELRAW}" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><a href="sms:${TELRAW}" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div></div>
+<div class="callbar"><div class="in cbrow"><a href="tel:${TELRAW}" class="cb-tel">📞 <span class="cb-t">전화 상담</span></a><span class="telt cbt">📞 ${TEL}</span><a href="sms:${TELRAW}" class="cb-sms">💬 <span class="cb-t">문자 상담</span></a></div></div>
 <!-- Naver Analytics --><script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script><script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "249e0fa52e17c20";if(window.wcs) {wcs_do();}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
 }
 
@@ -2206,7 +2212,7 @@ function footer(otherLink,regionLinks){
   return `<footer class="foot">
   <div class="fb">24<span style="color:var(--blue)">pay</span>shop</div>
   <div>카드단말기·포스기·키오스크·테이블오더·자동판매기 설치 전문</div>
-  <div>대표전화 <a href="tel:${TELRAW}">${TEL}</a> &nbsp;|&nbsp; 문자 <a href="sms:${TELRAW}">${TEL}</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
+  <div>대표전화 <a href="tel:${TELRAW}">${TEL}</a><span class="telt">${TEL}</span> &nbsp;|&nbsp; 문자 <a href="sms:${TELRAW}">${TEL}</a> &nbsp;|&nbsp; 09–21시 연중무휴</div>
   ${otherLink||""}
   <div style="margin-top:8px"><a href="/post/" style="color:var(--blue);font-weight:700">📰 단말기 정보</a></div>
   <a class="allbtn" href="/regions">📍 전체지역 보기 →</a>
@@ -2349,7 +2355,7 @@ ${HX("check","h2")}
 ${xpPolicyShort(key)}
 
 <p style="margin-top:18px;font-weight:600">${esc(fill(closes[0]))}</p><p>${esc(fill(closes[1]))}</p>
-<a class="cta" href="tel:${TELRAW}">${esc(fill(pick(K.cta,key,"cta")))} <span class="ar">▶</span></a>
+<a class="cta" href="tel:${TELRAW}">${esc(fill(pick(K.cta,key,"cta")))} <span class="ar">▶</span></a><span class="telt ctat">📞 ${TEL}</span>
 <a class="cta" href="sms:${TELRAW}" style="background:var(--blue);margin-top:8px">💬 ${esc(name)} 문자 상담 <span class="ar">▶</span></a>
 <div class="tline">＝＝＝ 24PAYSHOP · ${esc(LOC)} ＝＝＝</div>
 ${navBlock}
@@ -3432,7 +3438,7 @@ function pageFixed24(slug){
   const body = `${bcHtml}<h1 class="fph1">${esc(m.t)}</h1>`
     + `<div class="dates">📅 발행 <b>${kd(pub)}</b>&nbsp; · &nbsp;✏️ 수정 <b>${kd(mod)}</b>&nbsp; · &nbsp;✍️ 작성 <b>${AUTHOR24}</b></div>`
     + `<p class="lead">${esc(m.d)}</p>${toc}${secs}${xpNav(slug)}`
-    + `<a class="cta" href="tel:${TELRAW}">📞 준비되셨으면 전화 <span class="ar">▶</span></a>`
+    + `<a class="cta" href="tel:${TELRAW}">📞 준비되셨으면 전화 <span class="ar">▶</span></a><span class="telt ctat">📞 ${TEL}</span>`
     + `<a class="cta" href="sms:${TELRAW}" style="background:var(--blue);margin-top:8px">💬 문자 상담 <span class="ar">▶</span></a>`
     + footer("","");
   return shell({title:`${m.t} | ${BRAND}`, desc:m.d, canonical, ogimg:ogPhoto("seoul","card"), jsonld, body, published:iso(pub), modified:iso(mod)});
