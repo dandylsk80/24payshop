@@ -2665,7 +2665,8 @@ const G2_CSS='<style>.g2{font-size:15.5px;line-height:1.85}.g2 .g2-lead{font-siz
 function guide2Body(g,o){
   o=o||{}; let h='<div class="g2" data-guide="1">'+G2_CSS;
   h+='<p class="g2-lead">'+g2esc(g.answer)+'</p>';
-  for(const s of (g.sections||[])){ h+='<h2>'+g2esc(s.h)+'</h2>'+(s.p||[]).map(function(p){ return '<p>'+g2esc(p)+'</p>'; }).join(""); }
+  /* p 항목은 문장 단위라 3~4문장씩 한 문단으로 묶는다(첫 문단 첫 문장이 답) */
+  for(const s of (g.sections||[])){ const ps=s.p||[]; const n=ps.length>=9?4:3; const gr=[]; for(let i=0;i<ps.length;i+=n) gr.push(ps.slice(i,i+n).join(" ")); h+='<h2>'+g2esc(s.h)+'</h2>'+gr.map(function(p){ return '<p>'+g2esc(p)+'</p>'; }).join(""); }
   if(g.steps&&g.steps.items&&g.steps.items.length) h+='<h2>'+g2esc(g.steps.h||"절차는 어떻게 되나요?")+'</h2><ol class="g2-steps">'+g.steps.items.map(function(x){ return '<li>'+g2esc(x)+'</li>'; }).join("")+'</ol>';
   if(g.table&&g.table.rows&&g.table.rows.length) h+='<table class="g2-tbl">'+(g.table.caption?'<caption>'+g2esc(g.table.caption)+'</caption>':'')+'<thead><tr>'+(g.table.head||[]).map(function(x){ return '<th scope="col">'+g2esc(x)+'</th>'; }).join("")+'</tr></thead><tbody>'+g.table.rows.map(function(r){ return '<tr>'+r.map(function(c){ return '<td>'+g2esc(c)+'</td>'; }).join("")+'</tr>'; }).join("")+'</tbody></table>';
   if(g.faq&&g.faq.length) h+='<h2>'+g2esc(g2q(g).replace(/\?$/,""))+' — 자주 묻는 질문</h2>'+g.faq.map(function(f){ return '<details class="g2-fq"><summary>'+g2esc(f[0])+'</summary><p>'+g2esc(f[1])+'</p></details>'; }).join("");
