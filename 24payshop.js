@@ -1,3 +1,14 @@
+/* /og/<파일> — og 이미지 자체 서빙(2026-10-16): 자기 저장소 og/ → 허용 목록 → Cache API → GitHub raw → jsDelivr 폴백 → 1년 immutable */
+const OG_OK=/^([a-z0-9-]+\/)?[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/;
+async function ogProxy(request,ctx,p){
+  if(!OG_OK.test(p)) return new Response("not found",{status:404});
+  const ext=p.split(".").pop().toLowerCase(); const ct=ext==="png"?"image/png":ext==="webp"?"image/webp":"image/jpeg";
+  const key=new Request("https://24payshop.com/og/"+p+"?v=1",{method:"GET"}); const cache=(typeof caches!=="undefined"&&caches.default)?caches.default:null;
+  if(cache){ try{ const hit=await cache.match(key); if(hit) return hit; }catch(e){} }
+  const srcs=["https://raw.githubusercontent.com/dandylsk80/24payshop/main/og/"+p,"https://cdn.jsdelivr.net/gh/dandylsk80/24payshop@main/og/"+p];
+  for(let i=0;i<srcs.length;i++){ try{ const r=await fetch(srcs[i]); if(r.ok){ const body=await r.arrayBuffer(); const res=new Response(body,{headers:{"content-type":ct,"cache-control":"public, max-age=31536000, immutable","x-img-src":i?"jsd":"raw"}}); if(cache&&ctx&&ctx.waitUntil) ctx.waitUntil(cache.put(key,res.clone())); return res; } }catch(e){} }
+  return new Response("og image unavailable",{status:502});
+}
 function reEsc(x){ return x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
 /* 이름 뒤 조사를 받침에 맞게 고른다 (danmalgi 검증본을 13개 공통으로 사용) */
 function josaFor(word,j){
@@ -284,7 +295,7 @@ function photoUrl(slug,type){return PHOTOS.length?`${IMG_BASE}/${encodeURICompon
 const RAW_BASE="https://raw.githubusercontent.com/dandylsk80/24payshop/main/image";
 function rawUrl(slug,type){return PHOTOS.length?`${RAW_BASE}/${encodeURIComponent(PHOTOS[hash(slug+"|"+type+"img")%PHOTOS.length])}`:"";}
 // og:image — 히어로와 같은 사진의 1200×630 JPG 크롭본(og/ 폴더, 파일명 동일). 사진이 없으면 기본 PNG.
-const OG_BASE="https://cdn.jsdelivr.net/gh/dandylsk80/24payshop@main/og";
+const OG_BASE="https://24payshop.com/og";
 const OG_DEFAULT=OG_BASE+"/og-default.png";
 function ogPhoto(slug,type){return PHOTOS.length?`${OG_BASE}/${encodeURIComponent(PHOTOS[hash(slug+"|"+type+"img")%PHOTOS.length])}`:OG_DEFAULT;}
 
@@ -308,11 +319,11 @@ const HOME_HTML = `<!DOCTYPE html>
 <meta property="og:title" content="카드단말기 설치 — 무료 설치·빠른 설치·전 업종 | 24페이샵">
 <meta property="og:description" content="카드단말기 설치 전문 24페이샵. 전화 한 통이면 빠른 설치. 무료 설치·빠른 설치·전 업종·평생 A/S.">
 <meta property="og:url" content="https://24payshop.com/">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/dandylsk80/24payshop@main/og/og-default.png">
+<meta property="og:image" content="https://24payshop.com/og/og-default.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/png">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/dandylsk80/24payshop@main/og/og-default.png">
+<meta name="twitter:image" content="https://24payshop.com/og/og-default.png">
 <meta property="og:site_name" content="24페이샵">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -3462,6 +3473,7 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOSt
             .bind('24payshop', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', '24payshop.com', b.q||"")).run().catch(function(e){ console.log('[track] D1 insert fail', e&&e.message); }); if(ctx&&ctx.waitUntil) ctx.waitUntil(__ev); else await __ev;}}catch(e){ console.log('[track] fail', e&&e.message); } })(); if(ctx&&ctx.waitUntil) ctx.waitUntil(__task); else await __task; }catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(path==="/") return new Response(HOME_HTML.replace("</head>",homeSchema()+"</head>"),{headers:H_HTML});
+    if(path.indexOf("/og/")===0) return ogProxy(request,ctx,path.slice(4));
     if(path==="/robots.txt") return new Response(robots,{headers:H_TXT});
     if(path===`/${INDEXNOW_KEY}.txt`) return new Response(INDEXNOW_KEY,{headers:H_TXT});
     if(path==="/indexnow-submit"){
