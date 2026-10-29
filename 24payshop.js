@@ -3013,6 +3013,8 @@ const IN_TYPES = {
              urls: () => { const u = []; for (const [n, sl] of SIDO_ORDER) if (SIDO_GROUPS[n] && SIDO_GROUPS[n].length) u.push(`${SITE}/regions/sido/${sl}`); return u; } },
   gugun:   { sample: () => { const g = inFirstGugun(); return g ? gugunDetail(PROD_ORDER[0], g[0], g[1]) : ""; },
              urls: () => { const u = []; for (const sd of Object.keys(GUGUN_SLUG)) { const ssl = SIDO_NAME2SLUG.get(sd); if (!ssl) continue; for (const [gg, gsl] of GUGUN_SLUG[sd].fwd) for (const k of PROD_ORDER) u.push(`${SITE}/${PROD[k].path}/sido/${ssl}/${gsl}`); } return u; } },
+  /* 질문형 가이드(/guide/) — 목록 + 전 편을 합쳐 지문을 만든다(한 편만 고쳐도 잡히게) */
+  guide:   { sample: () => GUIDES2.length ? pageGuide2List() + GUIDES2.map(pageGuide2).join("") : "", urls: () => GUIDES2.length ? [SITE+"/guide/"].concat(GUIDES2.map(g => SITE+g2url(g.slug))) : [] },
   region:  { sample: () => productPage(PROD_ORDER[0], slugOf.get(REGIONS[0][0])),
              urls: () => { const u = []; for (const [name] of REGIONS) { const sl = slugOf.get(name); if (!sl) continue; for (const k of PROD_ORDER) u.push(`${SITE}/${PROD[k].path}/${sl}`); } return u; } }
 };
@@ -3085,10 +3087,11 @@ async function indexnowDaily(env, source, dry, force){
   if (dry) return plan;
   const res = [];
   if (fresh.length) res.push(await inSubmit(env, fresh, source, "posts"));
-  const next = Object.assign({}, prev || {}), today = new Date().toISOString().slice(0, 10);
+  const next = Object.assign({}, prev || {}), today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);   /* KST 날짜 — UTC 로 적으면 한국 시각 0~9시 수동 실행이 전날로 찍힌다 */
   /* URL 이 적은 유형(100개 이하)은 한 묶음으로 합쳐 보낸다 — 루트 URL 하나만 담긴 배치는 네이버가 422 를 준다(2026-10-13 실측). 홈만 남으면 목록 URL 을 짝으로 붙인다 */
   const small = changed.filter(t => IN_TYPES[t].urls().length <= 100), big = changed.filter(t => IN_TYPES[t].urls().length > 100);
-  const mark = (ts, ok) => { if (!ok) return; for (const t of ts) { if (!prev || prev[t] !== fp[t]) dates[t] = today; next[t] = fp[t]; } };
+  /* 첫 실행(저장된 지문 없음)은 "지금 바뀐 것"이 아니라 이 방식 배포 시점 상태라 SM_FALLBACK_DATE 로 적는다 */
+  const mark = (ts, ok) => { if (!ok) return; for (const t of ts) { if (!prev || prev[t] !== fp[t]) dates[t] = prev ? today : SM_FALLBACK_DATE; next[t] = fp[t]; } };
   if (small.length) {
     let urls = []; for (const t of small) urls = urls.concat(IN_TYPES[t].urls());
     if (urls.length === 1 && /^https?:\/\/[^/]+\/?$/.test(urls[0])) urls.push(IN_TYPES.list.urls()[0]);
