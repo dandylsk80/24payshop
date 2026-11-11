@@ -2885,30 +2885,6 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-# SEO 분석 크롤러 — 색인에 도움 안 되므로 차단
-User-agent: SemrushBot
-Disallow: /
-User-agent: AhrefsBot
-Disallow: /
-User-agent: AhrefsSiteAudit
-Disallow: /
-User-agent: MJ12bot
-Disallow: /
-User-agent: DotBot
-Disallow: /
-User-agent: DataForSeoBot
-Disallow: /
-User-agent: BLEXBot
-Disallow: /
-User-agent: rogerbot
-Disallow: /
-User-agent: SEOkicks
-Disallow: /
-User-agent: Barkrowler
-Disallow: /
-User-agent: serpstatbot
-Disallow: /
-
 # llms.txt: ${SITE}/llms.txt
 Llms-txt: ${SITE}/llms.txt
 # 안내 페이지: ${SITE}/compare ${SITE}/fit ${SITE}/cost ${SITE}/trust ${SITE}/cases ${SITE}/faq ${SITE}/prepare
